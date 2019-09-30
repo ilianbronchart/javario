@@ -10,8 +10,8 @@ public abstract class Config{
 
     // Scenes
     public final static class Scenes {
-        public final static String MAIN_MENU = "main_menu";
-        public final static String LEVEL_ONE = "level_one";
+        public final static String MAIN_MENU = "MAIN_MENU";
+        public final static String LEVEL_ONE = "LEVEL_ONE";
     }
 
     // Colors
@@ -22,20 +22,25 @@ public abstract class Config{
     public final static int MAX_JUMP_HEIGHT = 140;
     public final static int TILE_SIZE = 48;
 
+    // Accelerations / Friction
     public final static float MARIO_ACCELERATION = 0.0005f;
-    public final static float MARIO_MAX_VELOCITY = 0.35f;
     public final static float GRAVITY = 0.002f;
     public final static float DECEL_FRICTION = 0.95f;
     public final static float BRAKE_FRICTION = 0.90f;
-    public final static float MIN_STOP_VELOCITY = 0.02f;
+    
+    // Velocities for different events
+    public final static float JUMP_VELOCITY = -0.9f;
     public final static float BUMP_VEL = 0.1f; // Velocity that mario gets when he bumps the underside of a collider
+    public final static float MARIO_MAX_VELOCITY = 0.35f;
+    public final static float MIN_STOP_VELOCITY = 0.02f;
     public final static float ENEMY_START_VEL_X = 0.1f;
     public final static float GOOMBA_KNOCKED_VEL = -0.8f;
-
-    // Velocities for different events
-    public final static float JUMP_VELOCITY = -1f;
+    public final static float COIN_BOUNCE_SPEED = 0.6f;
 
     // Tags
     public final static String MARIO_TAG = "mario";
     public final static String GOOMBA_TAG = "goomba";
+    public final static String BRICK_TAG = "brick";
+    public final static String QUESTION_TAG = "question";
+    public final static String COIN_TAG = "coin";
 }

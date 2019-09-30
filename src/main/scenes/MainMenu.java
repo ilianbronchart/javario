@@ -9,10 +9,8 @@ import src.main.globals.SpriteAtlas;
 import src.main.globals.Keys;
 
 public class MainMenu extends Scene {
-    int selectorOption = 0;
-
     public MainMenu(){
-        super(false);
+        super(0, 0, Config.FRAME_SIZE[0], Config.FRAME_SIZE[1], 0);
         background = Sprites.background;
         gameObjects.add(new Selector());
     }
@@ -39,8 +37,8 @@ public class MainMenu extends Scene {
                 selectedOption += 1;
             } 
             
-            if (Keys.enter) {
-                nextScene = Config.Scenes.LEVEL_ONE;
+            if (Keys.enter && selectedOption % 2 == 0) {
+                triggerScene(Config.Scenes.LEVEL_ONE);
             }
 
             rect.pos = positions[selectedOption % 2];

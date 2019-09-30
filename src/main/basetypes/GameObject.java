@@ -17,7 +17,7 @@ public class GameObject {
     public boolean freezeMovement = false;
     public boolean gravity = false;
     public boolean isActivated = false; // Has entered the camera viewspace at some point
-    public boolean isActive = false; // Is actively performing actions
+    public boolean isAwake = true; // True by default, can be turned to false for custom behavior
     public boolean hasCollider = true;
     public boolean isEntity = false;
     public boolean flipSprite = false;
@@ -25,6 +25,18 @@ public class GameObject {
     public float friction = 1;
     public float acceleration = 0;
     public float maxVel = 0;
+
+    private String triggeredScene; // GameObjects can trigger a scene change depending on events
+    public boolean hasTriggeredScene;
+
+    public String getTriggeredScene() {
+        return triggeredScene;
+    }
+
+    public void triggerScene(String scene) {
+        hasTriggeredScene = true;
+        triggeredScene = scene;
+    }
 
     public GameObject(String tag, Image sprite, Rectangle rect){
         this.tag = tag;
@@ -42,7 +54,4 @@ public class GameObject {
     public void onCollision (GameObject gameObject, float dx, float dy) {};
 
     public void update(){}
-
-    // GameObjects can implement their own animation class
-    public class Animation {}
 }

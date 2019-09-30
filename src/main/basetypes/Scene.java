@@ -10,36 +10,53 @@ import src.main.Main;
 import src.main.globals.Time;
 
 public class Scene {
-    public String nextScene;
+    public String nextScene; // The scene that is to be queued after the current one
     static public Camera camera;
     public BufferedImage background;
     public ArrayList<GameObject> gameObjects = new ArrayList<GameObject>();
-    public boolean hasCamera = false;
 
-    public Scene(boolean hasCamera) {
-        this.hasCamera = hasCamera;
+    public Scene(int x, int y, int w, int h, int maxScroll) {
+        camera = new Camera(x, y, w, h, maxScroll);
     }
 
     public void update() {
         updateGameObjects();
+        physicsUpdate();
     }
 
-    // ______ PHYSICS ______
+    public void updateGameObjects() {
+        for (GameObject gameObject : gameObjects) {
+            if (camera.contains(gameObject.rect)) {
+                gameObject.isActivated = true;
+            }
+            if (gameObject.isAwake && gameObject.isActivated) {
+                gameObject.update();
+            }
+
+            if (gameObject.hasTriggeredScene) {
+                nextScene = gameObject.getTriggeredScene();
+                break;
+            }
+        }
+    }
 
     public void physicsUpdate() {
         for (GameObject gameObject : gameObjects) {
-            if(gameObject.isActive) {
+            if(gameObject.isAwake && gameObject.isActivated && !gameObject.freezeMovement) {
                 gameObject.accelerate();
                 moveGameObject(gameObject);
-            }
 
-            // If the gameObject is mario, move the camera
-            if (gameObject.tag.equals(Config.MARIO_TAG)) {
-                camera.updatePosition(gameObject.rect.pos, gameObject.vel);
-                preventBackTrack(gameObject); // Prevent player from backtracking
+
+                // If the gameObject is mario, move the camera
+                if (gameObject.tag.equals(Config.MARIO_TAG)) {
+                    camera.updatePosition(gameObject.rect.pos, gameObject.vel);
+                    preventBackTrack(gameObject); // Prevent player from backtracking
+                }
             }
         }
     };
+
+    // ______ PHYSICS ______
 
     public void moveGameObject(GameObject gameObject) {
         if (gameObject.vel.x != 0) {
@@ -54,7 +71,9 @@ public class Scene {
         gameObject.rect.pos.x += dx * Time.deltaTime;
         gameObject.rect.pos.y += dy * Time.deltaTime;
 
-        handleCollisions(gameObject, dx, dy);
+        if (gameObject.hasCollider) {
+            handleCollisions(gameObject, dx, dy);
+        }
     }
 
     public void preventBackTrack(GameObject mario) {
@@ -104,7 +123,6 @@ public class Scene {
 
         for(GameObject collider : colliderList) {
             if (!collider.hasCollider || collider == col) {
-                // Ignore collisions with itself
                 continue;
             }
             if (col.rect.pos.x - collider.rect.pos.x < 100 || collider.rect.w > 100) {
@@ -124,53 +142,41 @@ public class Scene {
         renderGameObjects(g2d);
     }
 
-    public void updateGameObjects() {
-        for (GameObject gameObject : gameObjects) {
-            if (camera.contains(gameObject.rect) && !gameObject.isActivated) {
-                gameObject.isActive = true;
-                gameObject.isActivated = true;
-            }
-            if (gameObject.isActive) {
-                gameObject.update();
-            }
-        }
-    }
-
     public void renderBackground(Graphics2D g2d) {
-        if(hasCamera) {
-            g2d.drawImage(background, (int) -camera.pos.x, (int) -camera.pos.y, Main.canvas);
-        } else {
-            g2d.drawImage(background, 0, 0, Main.canvas);
-        }
+        g2d.drawImage(background, (int) -camera.pos.x, (int) -camera.pos.y, Main.canvas);
     }
 
     public void renderGameObjects(Graphics2D g2d) {
         
         for (GameObject gameObject : gameObjects) {
-            Vector2 relativePosition = camera.toViewspace(gameObject.rect.pos);
+            renderGameObject(g2d, gameObject);
+        }
+    }
 
-            if (gameObject.isActive) {
-                if (gameObject.flipSprite) {
+    public void renderGameObject(Graphics2D g2d, GameObject gameObject) {
+        Vector2 relativePosition = camera.toViewspace(gameObject.rect.pos);
 
-                    g2d.drawImage(
-                        gameObject.sprite,
-                        (int) relativePosition.x + gameObject.sprite.getWidth(null),
-                        (int) relativePosition.y,
-                        -gameObject.sprite.getWidth(null),
-                        gameObject.sprite.getHeight(null),
-                        Main.canvas
-                    );
+        if (gameObject.isAwake && gameObject.isActivated) {
+            if (gameObject.flipSprite) {
 
-                } else {
+                g2d.drawImage(
+                    gameObject.sprite,
+                    (int) relativePosition.x + gameObject.sprite.getWidth(null),
+                    (int) relativePosition.y,
+                    -gameObject.sprite.getWidth(null),
+                    gameObject.sprite.getHeight(null),
+                    Main.canvas
+                );
 
-                    g2d.drawImage(
-                        gameObject.sprite,
-                        (int) relativePosition.x,
-                        (int) relativePosition.y,
-                        Main.canvas
-                    );
+            } else {
 
-                }
+                g2d.drawImage(
+                    gameObject.sprite,
+                    (int) relativePosition.x,
+                    (int) relativePosition.y,
+                    Main.canvas
+                );
+
             }
         }
     }
@@ -178,7 +184,7 @@ public class Scene {
     public void debugColliders(Graphics2D g2d, Color color) {
         g2d.setColor(color);
         for (GameObject col : gameObjects) {
-            if (col.isActive) {
+            if (col.isAwake && col.isActivated && col.hasCollider) {
                 g2d.drawRect((int) (col.rect.pos.x - camera.pos.x), (int) col.rect.pos.y, col.rect.w, col.rect.h);
             }
         }

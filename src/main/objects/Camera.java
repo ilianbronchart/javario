@@ -5,11 +5,11 @@ import src.main.Config;
 import src.main.globals.Time;
 
 public class Camera extends Rectangle {
-    int maxCameraScroll;
+    int maxScroll;
 
-    public Camera(float x, float y, int w, int h, int maxCameraScroll) {
+    public Camera(float x, float y, int w, int h, int maxScroll) {
         super(x, y, w, h);
-        this.maxCameraScroll = maxCameraScroll;
+        this.maxScroll = maxScroll;
     }
 
     public boolean contains(Rectangle rect) {
@@ -21,14 +21,12 @@ public class Camera extends Rectangle {
 
     public Vector2 toViewspace(Vector2 vect) {
         // Return vector relative to the camera
-
         return new Vector2(vect.x - pos.x, vect.y);
     }
 
     public void updatePosition(Vector2 marioPos, Vector2 marioVel) {
         //Update position of camera based on mario velocity and position
-
-        if (pos.x < maxCameraScroll) {
+        if (pos.x < maxScroll) {
             if (marioPos.x > pos.x + Config.CAMERA_FOLLOW_TRESHOLD && marioVel.x > 0) {
                 pos.x += marioVel.x * Time.deltaTime;
             }

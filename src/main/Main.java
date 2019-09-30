@@ -10,6 +10,7 @@ import java.awt.*;
 
 import src.main.globals.Keys;
 import src.main.globals.Time;
+import src.main.scenes.SceneManager;
 import src.main.utils.KeyListener;
 
 public class Main {

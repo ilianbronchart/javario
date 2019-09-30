@@ -33,11 +33,10 @@ public class Mario extends GameObject {
     public void update() {
         // if self.current_mario_state != 'Invincible_Mario':
         //     self.mario_states.update()
-        if (!freezeMovement) {
-            animation.tick();
-            actionStates.update();
-            stateEvents();
-        }
+        
+        actionStates.update();
+        stateEvents();
+        marioStates.update(); // Mario states take precedence over action states.
 
         if (vel.x > 0) {
             flipSprite = false;
@@ -92,6 +91,9 @@ public class Mario extends GameObject {
             if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect.pos.y) {
                 // Mario is squishing the goomba
                 actionStates.onEvent(Events.jump);
+            } else {
+                // Mario is running into the goomba
+                marioStates.onEvent(Events.shrink);
             }
         }
 
@@ -108,6 +110,7 @@ public class Mario extends GameObject {
     }
 
     static class Sprites extends SpriteSet {
+        static Image marioDead = SpriteAtlas.tileSet.getSubimage(240, 168, 48, 48);
 
         static Image[] smallMarioRun = new Image[] {
             SpriteAtlas.tileSet.getSubimage(0, 168, 48, 48),
@@ -137,16 +140,15 @@ public class Mario extends GameObject {
 
         int[] runFrames = {0, 1, 2, 1};
 
-        public Animation() {
-            
-        }
-
-        public void tick() {
-            animTimer += Time.deltaTime;
+        public void reset() {
+            currentFrame = 0;
+            animTimer = 0;
         }
 
         public void runAnim() {
-            if (marioStates.state instanceof States.SmallMario) {
+            animTimer += Time.deltaTime;
+
+            if (marioSize == 0) {
                 sprite = Sprites.smallMarioRun[runFrames[currentFrame % 4]];
             } else {
                 //sprite = Sprites.bigMarioRun[runFrames[currentFrame % 4]];
@@ -155,6 +157,13 @@ public class Mario extends GameObject {
             if (animTimer > 6 * Time.deltaTime) {
                 currentFrame++;
                 animTimer = 0;
+            }
+        }
+
+        public void deathAnim() {
+            animTimer += Time.deltaTime;
+            if (animTimer > 14 * Time.deltaTime) {
+                freezeMovement = false;
             }
         }
     }
@@ -316,9 +325,8 @@ public class Mario extends GameObject {
                         return new DecelState();
                     case brake:
                         return new BrakeState();
+                    case falling: // Fallthrough
                     case jump:
-                        return new JumpState();
-                    case falling:
                         return new JumpState();
                     case crouch:
                         return new CrouchState();
@@ -343,6 +351,7 @@ public class Mario extends GameObject {
                         return new MoveState();
                     case decel:
                         return new DecelState();
+                    case falling: // Fallthrough
                     case jump:
                         return new JumpState();
                     case crouch:
@@ -377,6 +386,7 @@ public class Mario extends GameObject {
                         return new BrakeState();
                     case move:
                         return new MoveState();
+                    case falling: // Fallthrough
                     case jump:
                         return new JumpState();
                     case crouch:
@@ -476,14 +486,35 @@ public class Mario extends GameObject {
                     case grow:
                         // return new GrowMario();
                     case shrink:
-                        // return new DeadMario();
+                        return new DeadMario();
                     case win:
                         // return new WinState();
                     case dead:
-                        // return new DeadMario();
+                        return new DeadMario();
                 }
 
                 return this;
+            }
+        }
+
+        public class DeadMario extends State {
+            public void onEnter(String state) {
+                sprite = Sprites.marioDead;
+                vel.y = Config.JUMP_VELOCITY;
+                vel.x = 0;
+                acceleration = 0;
+                hasCollider = false;
+                freezeMovement = true;
+                actionStates.disable();
+                animation.reset();
+            }
+
+            public void update() {
+                animation.deathAnim();
+                if (rect.pos.y > Config.FRAME_SIZE[1]) {
+                    isAwake = false;
+                    triggerScene(Config.Scenes.MAIN_MENU);
+                }
             }
         }
 
@@ -567,31 +598,6 @@ public class Mario extends GameObject {
     //     def on_exit(self, owner_object):
     //         owner_object.pos.y -= 31
     //         owner_object.start_height = owner_object.pos.y
-        
-    // class Dead_Mario(State):
-    //     """State when mario is dead"""
-    //     def __init__(self):
-    //         self.death_timer = 0
-
-    //     def on_event(self, event):
-    //         return self
-
-    //     def on_enter(self, owner_object):
-    //         owner_object.animation.current_sprite = sprites.DEAD_MARIO
-    //         owner_object.vel.y = c.DEATH_VEL_Y
-    //         owner_object.vel.x = 0
-    //         owner_object.freeze_movement = True
-    //         owner_object.freeze_input = True
-    //         pg.mixer.music.stop()
-    //         pg.mixer.music.set_endevent(c.DEATH_SONG_END)
-    //         pg.mixer.music.load(sounds.death)
-    //         pg.mixer.music.play()
-
-    //     def update(self, owner_object):
-    //         self.death_timer += c.delta_time
-    //         if self.death_timer > 20 * c.delta_time:
-    //             accelerate(owner_object, 0, c.GRAVITY)
-    //             owner_object.pos += owner_object.vel * c.delta_time
 
     // class Win_State(State):
     //     """State when mario wins, runs and manages events related to the final win animation"""

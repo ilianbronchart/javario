@@ -8,37 +8,32 @@ import src.main.basetypes.GameObject;
 import src.main.globals.SpriteAtlas;
 
 public class Brick extends GameObject {
+    GameObject item;
     States states = new States();
     Animation animation;
     StateMachine stateMachine;
     boolean destroyed = false;
 
-    public Brick(Rectangle rect) {
-        super("brick", SpriteAtlas.brick, rect);
-
-        animation = new Animation((int) rect.pos.y);
+    public Brick(Rectangle rect, GameObject item) {
+        super(Config.BRICK_TAG, SpriteAtlas.brick, rect);
+        animation = new Animation();
         stateMachine = new StateMachine(states.new IdleState());
+        this.item = item;
     }
 
     public void update() {
         stateMachine.update();
-        if (animation.animFrame == 0) {
-            stateMachine.onEvent(Events.idle);
-        }
     }
 
     public void onCollision(GameObject col, float dx, float dy) {
-        if (dy >= 0) {
-            // Brick was not hit from underside
-            return;
-        }
-
         if (col.tag.equals(Config.MARIO_TAG)) {
-            Mario mario = (Mario) col;
-            if(mario.marioSize == 0) {
-                stateMachine.onEvent(Events.bounce);
-            } else {
-                stateMachine.onEvent(Events.smash);
+            if (dy < 0) {
+                Mario mario = (Mario) col;
+                if(mario.marioSize == 0) {
+                    stateMachine.onEvent(Events.bounce);
+                } else {
+                    stateMachine.onEvent(Events.smash);
+                }
             }
         }
     }
@@ -47,8 +42,8 @@ public class Brick extends GameObject {
         int animFrame = 0;
         int startHeight;
 
-        public Animation(int startHeight) {
-            this.startHeight = startHeight;
+        public Animation() {
+            this.startHeight = (int) rect.pos.y;
         }
 
         public void bounceAnim() {
@@ -82,6 +77,10 @@ public class Brick extends GameObject {
 
                 return this;
             }
+
+            public void onEnter(String event) {
+                isEntity = false;
+            }
         }
 
         public class BounceState extends State {
@@ -93,8 +92,16 @@ public class Brick extends GameObject {
                 return this;
             }
 
+            public void onEnter(String event) {
+                isEntity = true;
+                item.isAwake = true;
+            }
+
             public void update() {
                 animation.bounceAnim();
+                if (animation.animFrame == 0) {
+                    stateMachine.onEvent(Events.idle);
+                }
             }
         }
 

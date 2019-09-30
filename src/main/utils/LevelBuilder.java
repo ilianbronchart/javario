@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.awt.*;
 
 import src.main.objects.Brick;
+import src.main.objects.Coin;
 import src.main.objects.Goomba;
+import src.main.objects.Question;
 import src.main.basetypes.GameObject;
 import src.main.basetypes.Rectangle;
 import src.main.Config;
@@ -47,13 +49,17 @@ public class LevelBuilder {
         }
     }
 
-    public static void addBrick(int x, int y) {
-        Brick brick = new Brick(new Rectangle(
-            x * Config.TILE_SIZE, 
-            y * Config.TILE_SIZE + 24, 
-            Config.TILE_SIZE, 
-            Config.TILE_SIZE
-        ));
+    public static void addBrick(int x, int y, GameObject item) {
+        Brick brick = new Brick(
+            new Rectangle(
+                x * Config.TILE_SIZE, 
+                y * Config.TILE_SIZE + 24, 
+                Config.TILE_SIZE, 
+                Config.TILE_SIZE
+            ),
+            item
+        );
+        gameObjects.add(item);
         gameObjects.add(brick);
     }
 
@@ -79,6 +85,29 @@ public class LevelBuilder {
         gameObjects.add(goomba);
     }
 
+    public static void addQuestion(int x, int y, GameObject item) {
+        Question question = new Question(
+            new Rectangle(
+                x * Config.TILE_SIZE, 
+                y * Config.TILE_SIZE + 24, 
+                Config.TILE_SIZE, 
+                Config.TILE_SIZE
+            ),
+            item
+        );
+        gameObjects.add(item);
+        gameObjects.add(question);
+    }
+
+    public static GameObject getCoin(int x, int y) {
+        return new Coin(new Rectangle(
+            x * Config.TILE_SIZE,
+            y * Config.TILE_SIZE + 24, 
+            Config.TILE_SIZE, 
+            Config.TILE_SIZE
+        ));
+    }
+
     public static ArrayList<GameObject> buildLevel (BufferedImage map) {
         levelMap = map;
         gameObjects = new ArrayList<GameObject>();
@@ -96,11 +125,13 @@ public class LevelBuilder {
                     // Static ground colliders, which are grouped together for optimization
                     addGroundCollider(x, y);
                 } else if (color.equals(new Color(100, 100, 100))) {
-                    addBrick(x, y);
+                    addBrick(x, y, getCoin(x,y));
                 } else if (color.equals(Color.RED)) {
                     addPipe(x, y);
                 } else if (color.equals(new Color(124, 66, 0))) {
                     addGoomba(x, y);
+                } else if (color.equals(Color.YELLOW)) {
+                    addQuestion(x, y, getCoin(x,y));
                 }
             }
         }

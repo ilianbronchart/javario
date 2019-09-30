@@ -3,6 +3,7 @@ package src.main.scenes;
 import java.awt.*;
 import java.awt.image.*;
 
+import src.main.Config;
 import src.main.basetypes.*;
 import src.main.basetypes.Rectangle;
 import src.main.objects.*;
@@ -10,8 +11,7 @@ import src.main.utils.LevelBuilder;
 
 public class LevelOne extends Scene {
     public LevelOne() {
-        super(true);
-        camera = new Camera(0, 0, 744, 672, 9000);
+        super(0, 0, Config.FRAME_SIZE[0], Config.FRAME_SIZE[1], 9000);
         gameObjects = LevelBuilder.buildLevel(Sprites.levelOne);
         gameObjects.add(new Mario("mario", new Rectangle(138, 552, 36, 48)));
         background = Sprites.background;

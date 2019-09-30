@@ -33,17 +33,30 @@ public class Goomba extends GameObject {
     }
 
     public void onCollision (GameObject col, float dx, float dy) {
-        if(col.tag.equals(Config.MARIO_TAG)) {
+        if (col.tag.equals(Config.MARIO_TAG)) {
             if (col.rect.pos.y + col.rect.h - dy * Time.deltaTime < rect.pos.y) {
                 // Mario is squishing this goomba
                 stateMachine.onEvent(Events.squish);
             }
-        } else {
-            if (dy > 0) {
-                vel.y = 0;
-            } else if (dx != 0) {
-                vel.x = -vel.x;
+            return;
+        } else if (col.tag.equals(Config.BRICK_TAG)) {
+            Brick brick = (Brick) col;
+            if (!(brick.stateMachine.state instanceof Brick.States.IdleState)) {
+                stateMachine.onEvent(Events.knocked);
+                return;
             }
+        } else if (col.tag.equals(Config.QUESTION_TAG)) {
+            Question question = (Question) col;
+            if (!(question.stateMachine.state instanceof Question.States.BounceState)) {
+                stateMachine.onEvent(Events.knocked);
+                return;
+            }
+        }
+
+        if (dy > 0) {
+            vel.y = 0;
+        } else if (dx != 0) {
+            vel.x = -vel.x;
         }
     }
 
@@ -97,8 +110,15 @@ public class Goomba extends GameObject {
             public void onEnter(String event) {
                 vel.y = Config.GOOMBA_KNOCKED_VEL;
                 sprite = SpriteAtlas.goomba[3];
+                hasCollider = false;
                 // TODO: totalScore += goomba score
                 // TODO: sounds.kick.play();
+            }
+
+            public void update() {
+                if(rect.pos.y > Config.FRAME_SIZE[1]) {
+                    onEvent(Events.dead);
+                }
             }
         }
 
@@ -113,8 +133,8 @@ public class Goomba extends GameObject {
             public void onEnter(String event) {
                 sprite = SpriteAtlas.goomba[2];
                 squishTimer += Time.deltaTime;
-                vel.x = 0;
                 hasCollider = false;
+                freezeMovement = true;
             }
             
             public void update() {
@@ -124,7 +144,7 @@ public class Goomba extends GameObject {
 
         public class DeadState extends State {
             public void onEnter(String event) {
-                isActive = false;
+                isAwake = false;
             }
         }
 
