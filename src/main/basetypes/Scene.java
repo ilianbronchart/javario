@@ -20,59 +20,64 @@ public class Scene {
     }
 
     public void update() {
-        updateGameObjects();
-        physicsUpdate();
+        updateGameObjects(gameObjects);
+        physicsUpdate(gameObjects);
     }
 
-    public void updateGameObjects() {
-        for (GameObject gameObject : gameObjects) {
-            if (camera.contains(gameObject.rect)) {
-                gameObject.isActivated = true;
+    public void updateGameObjects(ArrayList<GameObject> objects) {
+        for (GameObject obj : objects) {
+            if (camera.contains(obj.rect)) {
+                obj.isActivated = true;
             }
-            if (gameObject.isAwake && gameObject.isActivated) {
-                gameObject.update();
+            if (obj.isAwake && obj.isActivated) {
+                obj.update();
             }
 
-            if (gameObject.hasTriggeredScene) {
-                nextScene = gameObject.getTriggeredScene();
+            if (obj.hasTriggeredScene) {
+                nextScene = obj.getTriggeredScene();
                 break;
             }
+
+            // Recursively update child GameObjects
+            updateGameObjects(obj.childGameObjects);
         }
     }
 
-    public void physicsUpdate() {
-        for (GameObject gameObject : gameObjects) {
-            if(gameObject.isAwake && gameObject.isActivated && !gameObject.freezeMovement) {
-                gameObject.accelerate();
-                moveGameObject(gameObject);
+    public void physicsUpdate(ArrayList<GameObject> objects) {
+        for (GameObject obj : objects) {
+            if(obj.isAwake && obj.isActivated && !obj.freezeMovement) {
+                obj.accelerate();
+                moveGameObject(obj);
 
-
-                // If the gameObject is mario, move the camera
-                if (gameObject.tag.equals(Config.MARIO_TAG)) {
-                    camera.updatePosition(gameObject.rect.pos, gameObject.vel);
-                    preventBackTrack(gameObject); // Prevent player from backtracking
+                // If the GameObject is mario, move the camera
+                if (obj.tag.equals(Config.MARIO_TAG)) {
+                    camera.updatePosition(obj.rect.pos, obj.vel);
+                    preventBackTrack(obj); // Prevent player from backtracking
                 }
             }
+
+            // Recursively update child GameObjects
+            physicsUpdate(obj.childGameObjects);
         }
     };
 
     // ______ PHYSICS ______
 
-    public void moveGameObject(GameObject gameObject) {
-        if (gameObject.vel.x != 0) {
-            moveSingleAxis(gameObject, gameObject.vel.x, 0);
+    public void moveGameObject(GameObject obj) {
+        if (obj.vel.x != 0) {
+            moveSingleAxis(obj, obj.vel.x, 0);
         } 
-        if (gameObject.vel.y != 0) {
-            moveSingleAxis(gameObject, 0, gameObject.vel.y);
+        if (obj.vel.y != 0) {
+            moveSingleAxis(obj, 0, obj.vel.y);
         } 
     }
     
-    public void moveSingleAxis(GameObject gameObject, float dx, float dy) {
-        gameObject.rect.pos.x += dx * Time.deltaTime;
-        gameObject.rect.pos.y += dy * Time.deltaTime;
+    public void moveSingleAxis(GameObject obj, float dx, float dy) {
+        obj.rect.pos.x += dx * Time.deltaTime;
+        obj.rect.pos.y += dy * Time.deltaTime;
 
-        if (gameObject.hasCollider) {
-            handleCollisions(gameObject, dx, dy);
+        if (obj.hasCollider) {
+            handleCollisions(obj, dx, dy);
         }
     }
 
@@ -140,39 +145,42 @@ public class Scene {
 
     public void render(Graphics2D g2d) {
         renderBackground(g2d);
-        renderGameObjects(g2d);
+        renderGameObjects(g2d, gameObjects);
     }
 
     public void renderBackground(Graphics2D g2d) {
         g2d.drawImage(background, (int) -camera.pos.x, (int) -camera.pos.y, Main.canvas);
     }
 
-    public void renderGameObjects(Graphics2D g2d) {
-        for (GameObject gameObject : gameObjects) {
-            renderGameObject(g2d, gameObject);
+    public void renderGameObjects(Graphics2D g2d, ArrayList<GameObject> objects) {
+        for (GameObject obj : objects) {
+            renderGameObject(g2d, obj);
+
+            // Recursively render child GameObjects
+            renderGameObjects(g2d, obj.childGameObjects);
         }
     }
 
-    public void renderGameObject(Graphics2D g2d, GameObject gameObject) {
-        Vector2 spritePosition = gameObject.rect.pos.getAdd(gameObject.spriteOffset);
+    public void renderGameObject(Graphics2D g2d, GameObject obj) {
+        Vector2 spritePosition = obj.rect.pos.getAdd(obj.spriteOffset);
         Vector2 relativePosition = camera.toViewspace(spritePosition);
 
-        if (gameObject.isAwake && gameObject.isActivated) {
-            if (gameObject.flipSprite) {
+        if (obj.isAwake && obj.isActivated) {
+            if (obj.flipSprite) {
 
                 g2d.drawImage(
-                    gameObject.sprite,
-                    (int) relativePosition.x + gameObject.sprite.getWidth(null),
+                    obj.sprite,
+                    (int) relativePosition.x + obj.sprite.getWidth(null),
                     (int) relativePosition.y,
-                    -gameObject.sprite.getWidth(null),
-                    gameObject.sprite.getHeight(null),
+                    -obj.sprite.getWidth(null),
+                    obj.sprite.getHeight(null),
                     Main.canvas
                 );
 
             } else {
 
                 g2d.drawImage(
-                    gameObject.sprite,
+                    obj.sprite,
                     (int) relativePosition.x,
                     (int) relativePosition.y,
                     Main.canvas

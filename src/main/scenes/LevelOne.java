@@ -19,14 +19,14 @@ public class LevelOne extends Scene {
 
     @Override
     public void update() {
-        updateGameObjects();
-        physicsUpdate();
+        updateGameObjects(gameObjects);
+        physicsUpdate(gameObjects);
     }
 
     @Override
     public void render (Graphics2D g2d) {
         renderBackground(g2d);
-        renderGameObjects(g2d);
+        renderGameObjects(g2d, gameObjects);
         debugColliders(g2d, Color.GREEN);
     }
 

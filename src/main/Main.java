@@ -48,7 +48,7 @@ public class Main {
         // Calculate framerate
         if (System.currentTimeMillis() - fpsStartTime > 1000){
             fpsStartTime = System.currentTimeMillis();
-            System.out.println(fpsCounter);
+            // System.out.println(fpsCounter);
             fpsCounter = 0;
         }
         fpsCounter++;

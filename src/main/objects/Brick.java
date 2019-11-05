@@ -3,9 +3,12 @@ package src.main.objects;
 import src.main.basetypes.Rectangle;
 import src.main.basetypes.State;
 import src.main.basetypes.StateMachine;
-import src.main.Config;
+import src.main.basetypes.Vector2;
 import src.main.basetypes.GameObject;
+
+import src.main.Config;
 import src.main.globals.SpriteAtlas;
+import src.main.globals.Time;
 
 public class Brick extends GameObject {
     GameObject item;
@@ -29,6 +32,7 @@ public class Brick extends GameObject {
         if (col.tag.equals(Config.MARIO_TAG)) {
             if (dy < 0) {
                 Mario mario = (Mario) col;
+
                 if(mario.marioStates.state instanceof Mario.States.SmallMario) {
                     stateMachine.onEvent(Events.bounce);
                 } else {
@@ -106,31 +110,40 @@ public class Brick extends GameObject {
         }
 
         public class SmashState extends State {
+            public void onEnter(String state) {
+                childGameObjects.add(new BrickFragment(new Vector2(rect.pos.x, rect.pos.y), new Vector2(-0.1f, -0.5f)));
+                childGameObjects.add(new BrickFragment(new Vector2(rect.pos.x + 24, rect.pos.y), new Vector2(0.1f, -0.5f)));
+                childGameObjects.add(new BrickFragment(new Vector2(rect.pos.x, rect.pos.y + 24), new Vector2(-0.1f, -0.4f)));
+                childGameObjects.add(new BrickFragment(new Vector2(rect.pos.x + 24, rect.pos.y + 24), new Vector2(0.1f, -0.4f)));
 
+                isAwake = false;
+                hasCollider = false;
+            }
         }
     }
-}        
 
-//     def draw(self, pos):
-//         c.screen.blit(sprites.tile_set, (pos.x, pos.y), sprites.BRICK)
+    protected class BrickFragment extends GameObject {
+        private int animFrame = 0;
+        private float animTimer = 0;
 
-//     def instantiate_fragments(self):
-//         """Instantiate fragments when broken"""
-//         level.brick_fragments.append(Brick_Fragment(Vector2(self.pos.x, self.pos.y), Vector2(-0.1, -0.5), Rectangle()))
-//         level.brick_fragments.append(Brick_Fragment(Vector2(self.pos.x + 24, self.pos.y), Vector2(0.1, -0.5), Rectangle()))
-//         level.brick_fragments.append(Brick_Fragment(Vector2(self.pos.x + 24, self.pos.y + 24), Vector2(0.1, -0.4), Rectangle()))
-//         level.brick_fragments.append(Brick_Fragment(Vector2(self.pos.x, self.pos.y + 24), Vector2(-0.1, -0.4), Rectangle()))
+        public BrickFragment(Vector2 startPos, Vector2 startVel) {
+            super(Config.BRICK_FRAGMENT_TAG, SpriteAtlas.brickFragments[0], new Rectangle(startPos.x, startPos.y, 0, 0));
+            vel = startVel;
+            hasCollider = false;
+            gravity = true;
+            isAwake = true;
+        }
 
-//     class Break_State(State):
-//         """State when big mario hits brick from under"""
-//         def __init__(self):
-//             self.wait_for_frame = 0
+        public void update() {
+            if (animTimer > 7 * Time.deltaTime * animFrame) {
+                setSprite(SpriteAtlas.brickFragments[animFrame % 2]);
+                animFrame++;
+            }
+            animTimer += Time.deltaTime;
 
-//         def on_enter(self, owner_object):
-//             owner_object.instantiate_fragments()
-//             sounds.brick_smash.play()
-
-//         def update(self, owner_object):
-//             if self.wait_for_frame > 0:
-//                 level.dynamic_colliders.remove(owner_object)
-//             self.wait_for_frame += 1
+            if (rect.pos.y > Config.FRAME_SIZE[1]) {
+                isAwake = false;
+            }
+        }
+    }
+}

@@ -24,7 +24,7 @@ public class Mario extends GameObject {
         gravity = true;
         isEntity = true;
         animation = new Animation();
-        marioStates = new StateMachine(states.new SmallMario());
+        marioStates = new StateMachine(states.new BigMario());
         actionStates = new StateMachine(states.new IdleState());
         maxVel = Config.MARIO_MAX_VELOCITY;
     }
@@ -181,7 +181,6 @@ public class Mario extends GameObject {
 
         public void update() {
             animTimer += Time.deltaTime;
-            System.out.println(currentAnimation);
             switch (currentAnimation) {
                 case runAnim:
                     runAnim();

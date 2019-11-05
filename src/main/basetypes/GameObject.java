@@ -1,6 +1,7 @@
 package src.main.basetypes;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 import src.main.Config;
 import src.main.globals.Time;
@@ -20,7 +21,7 @@ public class GameObject {
     public boolean isActivated = false; // Has entered the camera viewspace at some point
     public boolean isAwake = true; // True by default, can be turned to false for custom behavior
     public boolean hasCollider = true;
-    public boolean isEntity = false;
+    public boolean isEntity = false; // Indicates whether the GameObject should interact with other entities
     public boolean flipSprite = false;
     
     public float friction = 1;
@@ -29,6 +30,8 @@ public class GameObject {
 
     private String triggeredScene; // GameObjects can trigger a scene change depending on events
     public boolean hasTriggeredScene;
+
+    public ArrayList<GameObject> childGameObjects = new ArrayList<GameObject>();
 
     public String getTriggeredScene() {
         return triggeredScene;

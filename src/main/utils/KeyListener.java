@@ -7,8 +7,6 @@ import src.main.globals.Keys;
 
 public class KeyListener extends KeyAdapter {
     public void keyPressed(KeyEvent evt) {
-        //System.out.println(evt.getKeyCode());
-
         switch (evt.getKeyCode()) {
             case 87:
                 Keys.up = true;
