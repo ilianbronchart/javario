@@ -18,6 +18,9 @@ public class Mario extends GameObject {
 
     boolean isJumping = false;
 
+    boolean isInvincible = false; // Brief period of invincibility after mario shrinks
+    private double invincibilityTimer = 0;
+
     public Mario(String tag, Rectangle rect){
         super(tag, Sprites.smallMarioIdle, rect);
         setSpriteOffset("CenterHorizontal");
@@ -35,12 +38,22 @@ public class Mario extends GameObject {
         stateEvents();
         marioStates.update();
         animation.update();
-
+        handleInvincibility();
 
         if (vel.x > 0) {
             flipSprite = false;
         } else if (vel.x < 0) {
             flipSprite = true;
+        }
+    }
+
+    public void handleInvincibility() {
+        if (isInvincible) {
+            if (invincibilityTimer > 80 * Time.deltaTime) {
+                isInvincible = false;
+                invincibilityTimer = 0;
+            }
+            invincibilityTimer += Time.deltaTime;
         }
     }
 
@@ -90,7 +103,10 @@ public class Mario extends GameObject {
                 if (marioStates.state instanceof States.BigMario) {
                     actionStates.onEvent(Events.shrink);
                 }
-                marioStates.onEvent(Events.shrink);
+
+                if (!isInvincible) {
+                    marioStates.onEvent(Events.shrink);
+                }
             }
         } else if (col.tag.equals(Config.SUPER_MUSHROOM_TAG) && marioStates.state instanceof States.SmallMario) {
             actionStates.onEvent(Events.grow);
@@ -110,13 +126,16 @@ public class Mario extends GameObject {
 
     @Override
     public void setSprite(Image newSprite) {
-        setSpriteOffset("CenterHorizontal");
-        setCollider(rect.w, newSprite.getHeight(null));
-        sprite = newSprite;
+        if (newSprite != sprite) {
+            setSpriteOffset("CenterHorizontal");
+            setCollider(rect.w, newSprite.getHeight(null));
+            sprite = newSprite;
+        }
     }
 
     static class Sprites extends SpriteSet {
         static Image marioDead = SpriteAtlas.tileSet.getSubimage(240, 168, 48, 48);
+        static Image invincibilitySprite = SpriteAtlas.tileSet.getSubimage(240, 48, 48, 48);
 
         // IDLE
         static Image smallMarioIdle = SpriteAtlas.tileSet.getSubimage(288, 168, 48, 48);
@@ -147,54 +166,84 @@ public class Mario extends GameObject {
         };
     }
 
-    interface Animations {
-        String runAnim = "runAnim";
-        String deathAnim = "deathAnim";
-        String growAnim = "growAnim";
-        String shrinkAnim = "shrinkAnim";
-    }
+    class Animation {
+        private Runnable currentAnimation = () -> {};
+        private boolean animationTerminated = false;
 
-    class Animation implements Animations {
-        private String currentAnimation = "";
+        private int animFrame = 0;
+        private double animTimer = 0;
 
-        int animFrame = 0;
-        double animTimer = 0;
+        private double invisibilityTimer = 0;
 
-        int[] runFrames = {0, 1, 2, 1};
-        int[] growFrames = {1, 0, 1, 0, 1, 2};
-        int[] shrinkFrames = {1, 2, 1, 2, 1, 0};
+        private int[] runFrames = {0, 1, 2, 1};
+        private int[] growFrames = {1, 0, 1, 0, 1, 2};
+        private int[] shrinkFrames = {1, 2, 1, 2, 1, 0};
 
-
-        public void clearAnimation() {
-            this.currentAnimation = "";
-        }
-
-        public void setAnimation(String animation) {
+        public void setAnimation(Runnable animation) {
             currentAnimation = animation;
+            animationTerminated = false;
             animFrame = 0;
             animTimer = 0;
         }
+        
+        public void clearAnimation() {
+            currentAnimation = () -> {};
+            animationTerminated = true;
+        }
 
         public boolean animationTerminated() {
-            return this.currentAnimation.equals("");
+            return animationTerminated;
         }
 
         public void update() {
-            animTimer += Time.deltaTime;
-            switch (currentAnimation) {
-                case runAnim:
-                    runAnim();
-                    break;
-                case deathAnim:
-                    deathAnim();
-                    break;
-                case growAnim:
-                    growAnim();
-                    break;
-                case shrinkAnim:
-                    shrinkAnim();
-                    break;
+            currentAnimation.run();
+
+            if (isInvincible) {
+                invincibleAnim();
             }
+
+            animTimer += Time.deltaTime;
+        }
+
+        public void invincibleAnim() {
+            // Alternate between invisible and visible every 7 frames
+            if (invisibilityTimer > 7 * Time.deltaTime) {
+                setSprite(Sprites.invincibilitySprite);
+            }
+
+            if (invisibilityTimer > 14 * Time.deltaTime) {
+                invisibilityTimer = 0;
+            }
+
+            invisibilityTimer += Time.deltaTime;
+        }
+
+        public void idleAnim() {
+            if(marioStates.state instanceof States.SmallMario) {
+                setSprite(Sprites.smallMarioIdle);
+            } else {
+                setSprite(Sprites.bigMarioIdle);
+            }
+        }
+
+        public void jumpAnim() {
+            if (marioStates.state instanceof States.SmallMario) {
+                setSprite(Sprites.smallMarioJump);
+            } else {
+                setSprite(Sprites.bigMarioJump);
+            }
+        }
+
+        public void brakeAnim() {
+            if (marioStates.state instanceof States.SmallMario) {
+                setSprite(Sprites.smallMarioBrake);
+            } else {
+                setSprite(Sprites.bigMarioBrake);
+            }
+        }
+
+        public void crouchAnim() {
+            setSprite(Sprites.marioCrouch);
         }
 
         public void runAnim() {
@@ -210,6 +259,7 @@ public class Mario extends GameObject {
         }
 
         public void deathAnim() {
+            setSprite(Sprites.marioDead);
             if (animTimer > 14 * Time.deltaTime) {
                 freezeMovement = false;
             }
@@ -258,30 +308,9 @@ public class Mario extends GameObject {
                 animFrame++;
             }
         }
-
-            // def shrink_anim(self):
-    //     """Animation when shrinking"""
-    //     self.current_sprite = sprites.SHRINK_SPRITES[self.shrink_frames[self.anim_frame]]
-    //     if self.anim_timer > 6 * c.delta_time:
-    //         self.anim_frame += 1
-    //         self.anim_timer = 0
-    //     self.new_y = self.start_height + (self.start_sprite_height - self.current_sprite[3])
     }
 
-    // class Animation():
-    // """Contains specific animation variables and functions for this class"""
-    // def __init__(self):
-    //     self.current_sprite = sprites.SMALL_MARIO_IDLE
 
-    //     self.mario_size = 'Small_Mario'
-    //     self.anim_frame = 0
-    //     self.anim_timer = c.INITIAL_TIMER_VALUE
-    //     self.invincible_timer = 0
-
-    //     self.start_height = None
-    //     self.new_y = self.start_height
-    //     self.shrink_frames = [0, 1, 0, 1, 2, 1, 2, 1]
-    //     self.start_sprite_height = 0
 
     // def win_anim_on_flag(self):
     //     """Animation when sliding down flag pole"""
@@ -316,8 +345,7 @@ public class Mario extends GameObject {
     class States implements Events {
         class IdleState extends State {
             public void onEnter(String event) {
-                refreshSprite();
-
+                animation.setAnimation(animation::idleAnim);
                 vel.x = 0;
             }
 
@@ -339,14 +367,6 @@ public class Mario extends GameObject {
                 }
                 
                 return this;
-            }
-
-            public void refreshSprite() {
-                if(marioStates.state instanceof States.SmallMario) {
-                    setSprite(Sprites.smallMarioIdle);
-                } else {
-                    setSprite(Sprites.bigMarioIdle);
-                }
             }
         }
 
@@ -374,8 +394,7 @@ public class Mario extends GameObject {
             }
 
             public void onEnter(String event) {
-                refreshSprite();
-
+                animation.setAnimation(animation::jumpAnim);
                 isJumping = true;
                 friction = 1;
                 
@@ -404,21 +423,13 @@ public class Mario extends GameObject {
             public void onExit() {
                 isJumping = false;
             }
-
-            public void refreshSprite() {
-                if (marioStates.state instanceof States.SmallMario) {
-                    setSprite(Sprites.smallMarioJump);
-                } else {
-                    setSprite(Sprites.bigMarioJump);
-                }
-            }
         }
         
         public class MoveState extends State {
             //State when moving on the ground and not breaking or decelerating
 
             public void onEnter(String event) {
-                animation.setAnimation(Animations.runAnim);
+                animation.setAnimation(animation::runAnim);
                 friction = 1;
                 acceleration = Config.MARIO_ACCELERATION;
                 acceleration *= Keys.left ? -1 : 1;
@@ -475,18 +486,9 @@ public class Mario extends GameObject {
             }
 
             public void onEnter(String event) {
-                refreshSprite();
-
+                animation.setAnimation(animation::brakeAnim);
                 friction = Config.BRAKE_FRICTION;
                 acceleration = 0;
-            }
-
-            public void refreshSprite() {
-                if (marioStates.state instanceof States.SmallMario) {
-                    setSprite(Sprites.smallMarioBrake);
-                } else {
-                    setSprite(Sprites.bigMarioBrake);
-                }
             }
         }
 
@@ -515,7 +517,7 @@ public class Mario extends GameObject {
             }
 
             public void onEnter(String event) {
-                animation.setAnimation(Animations.runAnim);
+                animation.setAnimation(animation::runAnim);
                 acceleration = 0;
                 friction = Config.DECEL_FRICTION; 
             }
@@ -550,7 +552,7 @@ public class Mario extends GameObject {
             }
 
             public void onEnter(String event) {
-                setSprite(Sprites.marioCrouch);
+                animation.setAnimation(animation::crouchAnim);
                 acceleration = 0;
                 friction = Config.BRAKE_FRICTION;
             }
@@ -633,10 +635,10 @@ public class Mario extends GameObject {
 
                 switch (event) {
                     case grow:
-                        animation.setAnimation(Animations.growAnim);
+                        animation.setAnimation(animation::growAnim);
                         break;
                     case shrink:
-                        animation.setAnimation(Animations.shrinkAnim);
+                        animation.setAnimation(animation::shrinkAnim);
                         break;
                     }
 
@@ -653,6 +655,7 @@ public class Mario extends GameObject {
                             break;
                         case shrink:
                             marioStates.onEvent(smallMario);
+                            isInvincible = true;
                             break;
                     }
                 }
@@ -696,8 +699,7 @@ public class Mario extends GameObject {
         public class DeadMario extends State {
             public void onEnter(String state) {
                 actionStates.disable();
-                animation.setAnimation(Animations.deathAnim);
-                setSprite(Sprites.marioDead);
+                animation.setAnimation(animation::deathAnim);
                 vel = new Vector2(0, Config.JUMP_VELOCITY);
                 acceleration = 0;
                 hasCollider = false;
