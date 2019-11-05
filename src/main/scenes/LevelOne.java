@@ -13,7 +13,7 @@ public class LevelOne extends Scene {
     public LevelOne() {
         super(0, 0, Config.FRAME_SIZE[0], Config.FRAME_SIZE[1], 9000);
         gameObjects = LevelBuilder.buildLevel(Sprites.levelOne);
-        gameObjects.add(new Mario("mario", new Rectangle(138, 552, 36, 48)));
+        gameObjects.add(new Mario("mario", new Rectangle(138, 500, 36, 48)));
         background = Sprites.background;
     }
 

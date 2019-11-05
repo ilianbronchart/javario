@@ -21,8 +21,7 @@ public class Goomba extends GameObject {
         isEntity = true;
         animation = new Animation();
         stateMachine = new StateMachine(states.new RunState());
-        maxVel = Config.ENEMY_START_VEL_X;
-        vel.x = -Config.ENEMY_START_VEL_X;
+        vel.x = -Config.ENTITY_START_VEL_X;
     }
 
     public void update() {

@@ -125,6 +125,7 @@ public class Scene {
             if (!collider.hasCollider || collider == col) {
                 continue;
             }
+
             if (col.rect.pos.x - collider.rect.pos.x < 100 || collider.rect.w > 100) {
                 if (col.rect.overlaps(collider.rect)) {
                     colliders.add(collider);
@@ -147,14 +148,14 @@ public class Scene {
     }
 
     public void renderGameObjects(Graphics2D g2d) {
-        
         for (GameObject gameObject : gameObjects) {
             renderGameObject(g2d, gameObject);
         }
     }
 
     public void renderGameObject(Graphics2D g2d, GameObject gameObject) {
-        Vector2 relativePosition = camera.toViewspace(gameObject.rect.pos);
+        Vector2 spritePosition = gameObject.rect.pos.getAdd(gameObject.spriteOffset);
+        Vector2 relativePosition = camera.toViewspace(spritePosition);
 
         if (gameObject.isAwake && gameObject.isActivated) {
             if (gameObject.flipSprite) {

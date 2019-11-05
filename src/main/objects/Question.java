@@ -35,7 +35,7 @@ public class Question extends GameObject {
         int animFrame = 0;
         int startHeight;
         int[] idleFrames = {1, 2, 3, 2, 1};
-        boolean finishedAnimating = false;
+        boolean doneAnimating = false;
 
         public Animation() {
             this.startHeight = (int) rect.pos.y;
@@ -61,15 +61,15 @@ public class Question extends GameObject {
         public void idleAnim() {
             animTimer += Time.deltaTime;
             if (animTimer > 6 * Time.deltaTime) {
-                finishedAnimating = false;
-                sprite = SpriteAtlas.question[idleFrames[animFrame]];
+                doneAnimating = false;
+                setSprite(SpriteAtlas.question[idleFrames[animFrame]]);
                 animFrame++;
                 animTimer = 0;
             }
 
             // Animation is on the last frame
             if (animFrame == 5) {
-                finishedAnimating = true;
+                doneAnimating = true;
                 animFrame = 0;
             }
         }
@@ -100,7 +100,7 @@ public class Question extends GameObject {
                 doAnimationTimer += Time.deltaTime;
                 if (doAnimationTimer > 5 * Time.deltaTime) {
                     animation.idleAnim();
-                    if (animation.finishedAnimating) {
+                    if (animation.doneAnimating) {
                         doAnimationTimer = 0;
                     }
                 }
@@ -123,7 +123,10 @@ public class Question extends GameObject {
             public void onEnter(String event) {
                 sprite = SpriteAtlas.question[0];
                 isEntity = true;
-                item.isAwake = true;
+
+                if (item.tag.equals(Config.COIN_TAG)) {
+                    item.isAwake = true;
+                }
             }
 
             public void update() {
@@ -138,6 +141,12 @@ public class Question extends GameObject {
             }
         }
 
-        public class OpenState extends State {}
+        public class OpenState extends State {
+            public void onEnter(String event) {
+                if (item.tag.equals(Config.SUPER_MUSHROOM_TAG)) {
+                    item.isAwake = true;
+                }
+            }
+        }
     }
 }

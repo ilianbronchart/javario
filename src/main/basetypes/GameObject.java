@@ -13,6 +13,7 @@ public class GameObject {
 
     public Rectangle rect;
     public Vector2 vel = new Vector2(0, 0);
+    public Vector2 spriteOffset = new Vector2(0, 0); // Offset between sprite and collider
     
     public boolean freezeMovement = false;
     public boolean gravity = false;
@@ -44,10 +45,39 @@ public class GameObject {
         this.rect = rect;
     }
 
+    public void setSpriteOffset(String offsetType) {
+        switch (offsetType) {
+            case "CenterHorizontal":
+                spriteOffset.x = -(sprite.getWidth(null) % rect.w) / 2;
+                break;
+            case "CenterVertical":
+                spriteOffset.y = -(sprite.getHeight(null) % rect.h) / 2;
+                break;
+            default:
+                System.out.println("Invalid offsetType value as argument to setSpriteOffset: " + offsetType);
+        }
+    }
+
+    public void setSprite(Image newSprite) {
+        sprite = newSprite;
+    }
+
+    public void setCollider(int newWidth, int newHeight) {
+        int dw = rect.w - newWidth;
+        int dh = rect.h - newHeight;
+
+        rect.pos.x += dw;
+        rect.pos.y += dh;
+        rect.w = newWidth;
+        rect.h = newHeight;
+    }
+
     public void accelerate() {
-        float yAcceleration = this.gravity ? Config.GRAVITY : 0;
+        float yAcceleration = gravity ? Config.GRAVITY : 0;
         vel.add(new Vector2(acceleration, yAcceleration).multiply(Time.deltaTime));
-        vel.x = Utils.clamp(vel.x, -maxVel, maxVel);
+        if (maxVel != 0) {
+            vel.x = Utils.clamp(vel.x, -maxVel, maxVel);
+        }
         vel.x *= friction;
     }
 

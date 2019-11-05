@@ -33,7 +33,7 @@ public abstract class Config{
     public final static float BUMP_VEL = 0.1f; // Velocity that mario gets when he bumps the underside of a collider
     public final static float MARIO_MAX_VELOCITY = 0.35f;
     public final static float MIN_STOP_VELOCITY = 0.02f;
-    public final static float ENEMY_START_VEL_X = 0.1f;
+    public final static float ENTITY_START_VEL_X = 0.1f;
     public final static float GOOMBA_KNOCKED_VEL = -0.8f;
     public final static float COIN_BOUNCE_SPEED = 0.6f;
 
@@ -43,4 +43,5 @@ public abstract class Config{
     public final static String BRICK_TAG = "brick";
     public final static String QUESTION_TAG = "question";
     public final static String COIN_TAG = "coin";
+    public final static String SUPER_MUSHROOM_TAG = "super_mushroom";
 }

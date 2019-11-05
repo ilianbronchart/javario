@@ -8,6 +8,7 @@ import src.main.objects.Brick;
 import src.main.objects.Coin;
 import src.main.objects.Goomba;
 import src.main.objects.Question;
+import src.main.objects.SuperMushroom;
 import src.main.basetypes.GameObject;
 import src.main.basetypes.Rectangle;
 import src.main.Config;
@@ -108,6 +109,15 @@ public class LevelBuilder {
         ));
     }
 
+    public static GameObject getSuperMushroom(int x, int y) {
+        return new SuperMushroom(new Rectangle(
+            x * Config.TILE_SIZE,
+            y * Config.TILE_SIZE + 24, 
+            Config.TILE_SIZE, 
+            Config.TILE_SIZE
+        ));
+    }
+
     public static ArrayList<GameObject> buildLevel (BufferedImage map) {
         levelMap = map;
         gameObjects = new ArrayList<GameObject>();
@@ -132,6 +142,8 @@ public class LevelBuilder {
                     addGoomba(x, y);
                 } else if (color.equals(Color.YELLOW)) {
                     addQuestion(x, y, getCoin(x,y));
+                } else if (color.equals(new Color(100, 255, 100))) {
+                    addQuestion(x, y, getSuperMushroom(x, y));
                 }
             }
         }

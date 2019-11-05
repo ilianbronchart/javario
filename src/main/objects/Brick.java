@@ -29,7 +29,7 @@ public class Brick extends GameObject {
         if (col.tag.equals(Config.MARIO_TAG)) {
             if (dy < 0) {
                 Mario mario = (Mario) col;
-                if(mario.marioSize == 0) {
+                if(mario.marioStates.state instanceof Mario.States.SmallMario) {
                     stateMachine.onEvent(Events.bounce);
                 } else {
                     stateMachine.onEvent(Events.smash);

@@ -2,8 +2,8 @@ package src.main.scenes;
 
 import java.awt.*;
 
+import src.main.Config;
 import src.main.basetypes.Scene;
-import src.main.scenes.*;
 
 public class SceneManager {
     Scene currentScene;
