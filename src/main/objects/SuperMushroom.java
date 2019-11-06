@@ -37,6 +37,11 @@ public class SuperMushroom extends GameObject {
                 vel.y = 0;
             } else if (dx != 0) {
                 vel.x = -vel.x;
+                if (dx > 0) {
+                    rect.pos.x = other.rect.pos.x - rect.w;  
+                } else {
+                    rect.pos.x = other.rect.pos.x + other.rect.w;  
+                }
             }
         }
     }

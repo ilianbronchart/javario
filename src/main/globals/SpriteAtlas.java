@@ -2,12 +2,20 @@ package src.main.globals;
 
 import src.main.basetypes.SpriteSet;
 import java.awt.image.BufferedImage;
+import java.awt.*;
 
 public class SpriteAtlas extends SpriteSet {
     // For sprites that will be reused in multiple instances
     public static BufferedImage tileSet = getBufferedImage("tile_set.png");
     public static BufferedImage brick = tileSet.getSubimage(0, 0, 48, 48);
     public static BufferedImage superMushroom = tileSet.getSubimage(192, 48, 48, 48);
+
+    // TURTLE
+    public static Image[] turtleRun = {
+        tileSet.getSubimage(0, 96, 48, 72),
+        tileSet.getSubimage(48, 96, 48, 72)
+    };
+    public static Image turtleShell = tileSet.getSubimage(96, 126, 48, 42);
     
     public static BufferedImage[] brickFragments = {
         tileSet.getSubimage(252, 12, 24, 24),

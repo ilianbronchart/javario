@@ -36,8 +36,8 @@ public class Goomba extends GameObject {
             if (col.rect.pos.y + col.rect.h - dy * Time.deltaTime < rect.pos.y) {
                 // Mario is squishing this goomba
                 stateMachine.onEvent(Events.squish);
+                return;
             }
-            return;
         } else if (col.tag.equals(Config.BRICK_TAG)) {
             Brick brick = (Brick) col;
             if (!(brick.stateMachine.state instanceof Brick.States.IdleState)) {
@@ -46,7 +46,13 @@ public class Goomba extends GameObject {
             }
         } else if (col.tag.equals(Config.QUESTION_TAG)) {
             Question question = (Question) col;
-            if (!(question.stateMachine.state instanceof Question.States.BounceState)) {
+            if (question.stateMachine.state instanceof Question.States.BounceState) {
+                stateMachine.onEvent(Events.knocked);
+                return;
+            }
+        } else if (col.tag.equals(Config.TURTLE_TAG)) {
+            Turtle turtle = (Turtle) col;
+            if (turtle.stateMachine.state instanceof Turtle.States.MoveShell) {
                 stateMachine.onEvent(Events.knocked);
                 return;
             }

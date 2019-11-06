@@ -3,7 +3,7 @@ package src.main.basetypes;
 public class State {
     public State onEvent(String event){
         // Returns new state based on event
-        return new State();
+        return this;
     }
 
     public void onEnter(String event) {

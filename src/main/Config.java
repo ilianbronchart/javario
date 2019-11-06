@@ -40,6 +40,7 @@ public abstract class Config{
     // Tags
     public final static String MARIO_TAG = "mario";
     public final static String GOOMBA_TAG = "goomba";
+    public final static String TURTLE_TAG = "turtle";
     public final static String BRICK_TAG = "brick";
     public final static String BRICK_FRAGMENT_TAG = "brick_fragment";
     public final static String QUESTION_TAG = "question";

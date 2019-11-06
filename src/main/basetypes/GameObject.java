@@ -62,7 +62,9 @@ public class GameObject {
     }
 
     public void setSprite(Image newSprite) {
-        sprite = newSprite;
+        if (sprite != newSprite) {
+            sprite = newSprite;
+        }
     }
 
     public void setCollider(int newWidth, int newHeight) {

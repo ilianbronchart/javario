@@ -9,6 +9,7 @@ import src.main.objects.Coin;
 import src.main.objects.Goomba;
 import src.main.objects.Question;
 import src.main.objects.SuperMushroom;
+import src.main.objects.Turtle;
 import src.main.basetypes.GameObject;
 import src.main.basetypes.Rectangle;
 import src.main.Config;
@@ -100,6 +101,16 @@ public class LevelBuilder {
         gameObjects.add(question);
     }
 
+    public static void addTurtle(int x, int y) {
+        Turtle turtle = new Turtle(new Rectangle(
+            x * Config.TILE_SIZE,
+            y * Config.TILE_SIZE,
+            Config.TILE_SIZE,
+            72
+        ));
+        gameObjects.add(turtle);
+    }
+
     public static GameObject getCoin(int x, int y) {
         return new Coin(new Rectangle(
             x * Config.TILE_SIZE,
@@ -144,6 +155,8 @@ public class LevelBuilder {
                     addQuestion(x, y, getCoin(x,y));
                 } else if (color.equals(new Color(100, 255, 100))) {
                     addQuestion(x, y, getSuperMushroom(x, y));
+                } else if (color.equals(new Color(79, 32, 207))) {
+                    addTurtle(x, y);
                 }
             }
         }

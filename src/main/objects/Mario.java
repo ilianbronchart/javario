@@ -27,7 +27,7 @@ public class Mario extends GameObject {
         gravity = true;
         isEntity = true;
         animation = new Animation();
-        marioStates = new StateMachine(states.new BigMario());
+        marioStates = new StateMachine(states.new SmallMario());
         actionStates = new StateMachine(states.new IdleState());
         maxVel = Config.MARIO_MAX_VELOCITY;
     }
@@ -94,22 +94,54 @@ public class Mario extends GameObject {
     }
 
     public void onCollision(GameObject col, float dx, float dy) {
-        if (col.tag.equals(Config.GOOMBA_TAG)) {
-            if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect.pos.y) {
-                // Mario is squishing the goomba
-                actionStates.onEvent(Events.jump);
-            } else {
-                // Mario is running into the goomba
-                if (marioStates.state instanceof States.BigMario) {
-                    actionStates.onEvent(Events.shrink);
-                }
+        switch (col.tag) {
+            case Config.GOOMBA_TAG:
 
-                if (!isInvincible) {
-                    marioStates.onEvent(Events.shrink);
+                if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect.pos.y) {
+                    // Mario is squishing the goomba
+                    actionStates.onEvent(Events.jump);
+                } else {
+                    // Mario is running into the goomba
+                    if (marioStates.state instanceof States.BigMario) {
+                        actionStates.onEvent(Events.shrink);
+                    }
+
+                    if (!isInvincible) {
+                        marioStates.onEvent(Events.shrink);
+                    }
                 }
-            }
-        } else if (col.tag.equals(Config.SUPER_MUSHROOM_TAG) && marioStates.state instanceof States.SmallMario) {
-            actionStates.onEvent(Events.grow);
+                break;
+
+            case Config.TURTLE_TAG:
+                Turtle turtle = (Turtle) col;   
+
+                if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect.pos.y) {
+                    // Mario is squishing the turtle
+                    if (!(turtle.stateMachine.state instanceof Turtle.States.ShellState)) {
+                        actionStates.onEvent(Events.jump);
+                    }
+                } else {
+                    // Mario is running into the turtle
+                    if (!(turtle.stateMachine.state instanceof Turtle.States.ShellState)) {
+                        System.out.println(turtle.stateMachine.state);
+                        if (marioStates.state instanceof States.BigMario) {
+                            actionStates.onEvent(Events.shrink);
+                        }
+    
+                        if (!isInvincible) {
+                            marioStates.onEvent(Events.shrink);
+                        }
+                    }
+
+                }
+                break;
+
+            case Config.SUPER_MUSHROOM_TAG:
+                
+                if (marioStates.state instanceof States.SmallMario) {
+                    actionStates.onEvent(Events.grow);
+                }
+                break;
         }
 
         if (!col.isEntity) {
@@ -266,7 +298,7 @@ public class Mario extends GameObject {
         }
 
         public void growAnim() {
-            if (animTimer > (10 * Time.deltaTime) * animFrame) {
+            if (animTimer > (7 * Time.deltaTime) * animFrame) {
                 switch (growFrames[animFrame]) {
                     case 0:
                         setSprite(Sprites.smallMarioIdle);
@@ -288,7 +320,7 @@ public class Mario extends GameObject {
         }
 
         public void shrinkAnim() {
-            if (animTimer > (10 * Time.deltaTime) * animFrame) {
+            if (animTimer > (7 * Time.deltaTime) * animFrame) {
                 switch (shrinkFrames[animFrame]) {
                     case 0:
                         setSprite(Sprites.smallMarioIdle);
@@ -309,8 +341,6 @@ public class Mario extends GameObject {
             }
         }
     }
-
-
 
     // def win_anim_on_flag(self):
     //     """Animation when sliding down flag pole"""
