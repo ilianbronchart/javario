@@ -17,6 +17,7 @@ public class Mario extends GameObject {
     Animation animation;
 
     boolean isJumping = false;
+    boolean winCondition = false;
 
     boolean isInvincible = false; // Brief period of invincibility after mario shrinks
     private double invincibilityTimer = 0;
@@ -34,6 +35,7 @@ public class Mario extends GameObject {
     
     @Override
     public void update() {
+        handleWinCondition();
         actionStates.update();
         stateEvents();
         marioStates.update();
@@ -54,6 +56,12 @@ public class Mario extends GameObject {
                 invincibilityTimer = 0;
             }
             invincibilityTimer += Time.deltaTime;
+        }
+    }
+
+    public void handleWinCondition() {
+        if (winCondition) {
+            Keys.right = true;
         }
     }
 
@@ -94,14 +102,37 @@ public class Mario extends GameObject {
     }
 
     public void onCollision(GameObject col, float dx, float dy) {
-        switch (col.tag) {
-            case Config.GOOMBA_TAG:
+        if (col.hasTag(Config.GOOMBA_TAG)) {
+            if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect.pos.y) {
+                // Mario is squishing the goomba
+                actionStates.onEvent(Events.jump);
+                rect.pos.y = col.rect.pos.y - rect.h;
+            } else {
+                // Mario is running into the goomba
+                if (marioStates.state instanceof States.BigMario) {
+                    actionStates.onEvent(Events.shrink);
+                }
 
-                if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect.pos.y) {
-                    // Mario is squishing the goomba
+                if (!isInvincible) {
+                    marioStates.onEvent(Events.shrink);
+                }
+            }
+
+            return;
+        }
+
+        if (col.hasTag(Config.TURTLE_TAG)) {
+            Turtle turtle = (Turtle) col;   
+
+            if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect.pos.y) {
+                // Mario is squishing the turtle
+                if (!(turtle.stateMachine.state instanceof Turtle.States.ShellState)) {
                     actionStates.onEvent(Events.jump);
-                } else {
-                    // Mario is running into the goomba
+                }
+            } else {
+                // Mario is running into the turtle
+                if (!(turtle.stateMachine.state instanceof Turtle.States.ShellState)) {
+                    System.out.println(turtle.stateMachine.state);
                     if (marioStates.state instanceof States.BigMario) {
                         actionStates.onEvent(Events.shrink);
                     }
@@ -110,49 +141,41 @@ public class Mario extends GameObject {
                         marioStates.onEvent(Events.shrink);
                     }
                 }
-                break;
+            }
 
-            case Config.TURTLE_TAG:
-                Turtle turtle = (Turtle) col;   
-
-                if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect.pos.y) {
-                    // Mario is squishing the turtle
-                    if (!(turtle.stateMachine.state instanceof Turtle.States.ShellState)) {
-                        actionStates.onEvent(Events.jump);
-                    }
-                } else {
-                    // Mario is running into the turtle
-                    if (!(turtle.stateMachine.state instanceof Turtle.States.ShellState)) {
-                        System.out.println(turtle.stateMachine.state);
-                        if (marioStates.state instanceof States.BigMario) {
-                            actionStates.onEvent(Events.shrink);
-                        }
-    
-                        if (!isInvincible) {
-                            marioStates.onEvent(Events.shrink);
-                        }
-                    }
-
-                }
-                break;
-
-            case Config.SUPER_MUSHROOM_TAG:
-                
-                if (marioStates.state instanceof States.SmallMario) {
-                    actionStates.onEvent(Events.grow);
-                }
-                break;
+            return;
         }
 
-        if (!col.isEntity) {
-            if (dx != 0) {
-                vel.x = 0;
-                acceleration = 0;
-            } else if (dy > 0) {
-                vel.y = 0;
-            } else if (dy < 0) {
-                vel.y = Config.BUMP_VEL;
+        if (col.hasTag(Config.SUPER_MUSHROOM_TAG)) {
+            if (marioStates.state instanceof States.SmallMario) {
+                actionStates.onEvent(Events.grow);
             }
+        }
+
+        if (col.hasTag(Config.FLAGPOLE_TAG)) {
+            if (rect.pos.y < col.rect.pos.y + col.rect.h) {
+                rect.pos.x = col.rect.pos.x + 30;
+                actionStates.onEvent(Events.flagPole);
+            } 
+
+            if (rect.pos.y + rect.h > col.rect.pos.y + col.rect.h - 20) {
+                actionStates.onEvent(Events.win);
+            }
+            return;
+        }
+
+        if (col.hasTag(Config.WIN_TRIGGER_TAG)) {
+            triggerScene(Config.Scenes.MAIN_MENU);
+            Keys.unFreezeInput();
+        }
+
+        if (dx != 0) {
+            vel.x = 0;
+            acceleration = 0;
+        } else if (dy > 0) {
+            vel.y = 0;
+        } else if (dy < 0) {
+            vel.y = Config.BUMP_VEL;
         }
     }
 
@@ -184,6 +207,16 @@ public class Mario extends GameObject {
 
         // CROUCH
         static Image marioCrouch = SpriteAtlas.tileSet.getSubimage(240, 246, 48, 66);
+
+        static Image[] smallMarioFlag = {
+            SpriteAtlas.tileSet.getSubimage(387, 168, 42, 48),
+            SpriteAtlas.tileSet.getSubimage(339, 168, 42, 48)
+        };
+        
+        static Image[] bigMarioFlag = {
+            SpriteAtlas.tileSet.getSubimage(387, 222, 42, 90),
+            SpriteAtlas.tileSet.getSubimage(339, 222, 42, 90)
+        };
 
         static Image[] smallMarioRun = new Image[] {
             SpriteAtlas.tileSet.getSubimage(0, 168, 48, 48),
@@ -235,6 +268,17 @@ public class Mario extends GameObject {
             }
 
             animTimer += Time.deltaTime;
+        }
+
+        public void flagAnim() {
+            if (animTimer > 10 * Time.deltaTime * animFrame) {
+                animFrame++;
+                if (marioStates.state instanceof States.SmallMario) {
+                    setSprite(Sprites.smallMarioFlag[animFrame % 2]);
+                } else {
+                    setSprite(Sprites.bigMarioFlag[animFrame % 2]);
+                }
+            }
         }
 
         public void invincibleAnim() {
@@ -362,11 +406,12 @@ public class Mario extends GameObject {
         String decel = "decel";
         String brake = "brake";
         String crouch = "crouch";
+        String flagPole = "flagPole";
+        String win = "win";
 
         // Mario events
         String shrink = "shrink";
         String grow = "grow";
-        String win = "win";
         String dead = "dead";
         String bigMario = "bigMario";
         String smallMario = "smallMario";
@@ -418,6 +463,8 @@ public class Mario extends GameObject {
                     case grow: // Fallthrough
                     case shrink:
                         return new PowerupState();
+                    case flagPole:
+                        return new FlagPoleState();
                 }
 
                 return this;
@@ -430,6 +477,11 @@ public class Mario extends GameObject {
                 
                 if (event != Events.falling && event != Events.resumeJump) {
                     vel.y = Config.JUMP_VELOCITY;
+                }
+
+                if (event == Events.win) {
+                    // When mario jumps off the flagpole
+                    vel.y = Config.WIN_JUMP_VELOCITY;
                 }
 
                 // if (marioStates.state instanceof SmallMario ) {
@@ -599,6 +651,7 @@ public class Mario extends GameObject {
             }
         }
 
+
         public class InvincibleMario extends State {
             // State after shrinking when mario is invincible
 
@@ -631,10 +684,6 @@ public class Mario extends GameObject {
                         blinkTimer = 0;
                     }
                 }
-            }
-
-            public void onExit() {
-                // animation.resetAnimVars();
             }
         }
 
@@ -692,6 +741,35 @@ public class Mario extends GameObject {
             }
         }
 
+        public class FlagPoleState extends State {
+            public State onEvent(String event) {
+                if (event.equals(win)) {
+                    return new JumpState();
+                }
+
+                return this;
+            }
+
+            public void onEnter(String event) {
+                Keys.freezeInput();
+                animation.setAnimation(animation::flagAnim);
+                gravity = false;
+                vel.y = 0.1f;
+            }
+            
+            public void update() {
+                flipSprite = true;
+                vel.x = 0;
+            }
+
+            public void onExit() {
+                vel.x = 0.20f;
+                maxVel = vel.x;
+                gravity = true;
+                winCondition = true;
+            }
+        }
+
 // MARIO STATES _________________________________________________________________________
 
         public class SmallMario extends State {
@@ -699,8 +777,6 @@ public class Mario extends GameObject {
                 switch (event) {
                     case shrink:
                         return new DeadMario();
-                    case win:
-                        // return new WinState();
                     case dead:
                         return new DeadMario();
                     case bigMario:
@@ -718,8 +794,6 @@ public class Mario extends GameObject {
                         return new DeadMario();
                     case smallMario:
                         return new SmallMario();
-                    case win:
-                        // return new WinState();
                 }
 
                 return this;

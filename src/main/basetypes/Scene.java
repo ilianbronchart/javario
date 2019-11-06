@@ -8,11 +8,14 @@ import src.main.objects.Camera;
 import src.main.Config;
 import src.main.Main;
 import src.main.globals.Time;
+import src.main.basetypes.Vector2;
 
 public class Scene {
     public String nextScene; // The scene that is to be queued after the current one
     static public Camera camera;
-    public BufferedImage background;
+    protected BufferedImage background;
+    protected BufferedImage foreground;
+    protected Vector2 foregroundPos;
     public ArrayList<GameObject> gameObjects = new ArrayList<GameObject>();
 
     public Scene(int x, int y, int w, int h, int maxScroll) {
@@ -50,7 +53,7 @@ public class Scene {
                 moveGameObject(obj);
 
                 // If the GameObject is mario, move the camera
-                if (obj.tag.equals(Config.MARIO_TAG)) {
+                if (obj.hasTag(Config.MARIO_TAG)) {
                     camera.updatePosition(obj.rect.pos, obj.vel);
                     preventBackTrack(obj); // Prevent player from backtracking
                 }
@@ -151,6 +154,11 @@ public class Scene {
     public void renderBackground(Graphics2D g2d) {
         g2d.drawImage(background, (int) -camera.pos.x, (int) -camera.pos.y, Main.canvas);
     }
+    
+    public void renderForeground(Graphics2D g2d) {
+        Vector2 relativePosition = camera.toViewspace(foregroundPos);
+        g2d.drawImage(foreground, (int) relativePosition.x, (int) relativePosition.y, Main.canvas);
+    }
 
     public void renderGameObjects(Graphics2D g2d, ArrayList<GameObject> objects) {
         for (GameObject obj : objects) {
@@ -167,7 +175,6 @@ public class Scene {
 
         if (obj.isAwake && obj.isActivated) {
             if (obj.flipSprite) {
-
                 g2d.drawImage(
                     obj.sprite,
                     (int) relativePosition.x + obj.sprite.getWidth(null),
@@ -176,16 +183,13 @@ public class Scene {
                     obj.sprite.getHeight(null),
                     Main.canvas
                 );
-
             } else {
-
                 g2d.drawImage(
                     obj.sprite,
                     (int) relativePosition.x,
                     (int) relativePosition.y,
                     Main.canvas
                 );
-
             }
         }
     }

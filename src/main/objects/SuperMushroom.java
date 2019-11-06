@@ -29,9 +29,15 @@ public class SuperMushroom extends GameObject {
     }
 
     public void onCollision(GameObject other, float dx , float dy) {
-        if (other.tag.equals(Config.MARIO_TAG)) {
+        if (other.hasTag(Config.MARIO_TAG)) {
             isAwake = false;
             hasCollider = false;
+        } else if (other.isEntity) {
+            if (other.hasTag(Config.BRICK_TAG) || other.hasTag(Config.QUESTION_TAG)) {
+                vel.y -= 0.3f;
+            }
+            // Cancel collision
+            return;
         } else {
             if (dy > 0) {
                 vel.y = 0;

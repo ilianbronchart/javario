@@ -1,16 +1,11 @@
 package src.main.utils;
 
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.awt.*;
+import java.util.ArrayList;
+import java.awt.image.BufferedImage;
 
-import src.main.objects.Brick;
-import src.main.objects.Coin;
-import src.main.objects.Goomba;
-import src.main.objects.Question;
-import src.main.objects.SuperMushroom;
-import src.main.objects.Turtle;
-import src.main.basetypes.GameObject;
+import src.main.objects.*;
+import src.main.basetypes.*;
 import src.main.basetypes.Rectangle;
 import src.main.Config;
 
@@ -22,7 +17,6 @@ public class LevelBuilder {
     static boolean foundEndTile = false;
     static BufferedImage levelMap;
     static BufferedImage emptyImg = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-
 
     public static void addGroundCollider(int x, int y) {                 
         if (startTileX == null) {
@@ -111,6 +105,26 @@ public class LevelBuilder {
         gameObjects.add(turtle);
     }
 
+    public static void addFlagPole(int x, int y) {
+        FlagPole flagPole = new FlagPole(new Rectangle(
+            x * Config.TILE_SIZE,
+            y * Config.TILE_SIZE - 8 * Config.TILE_SIZE,
+            Config.TILE_SIZE,
+            456
+        ));
+        gameObjects.add(flagPole);
+    }
+
+    public static void addWinTrigger(int x, int y) {
+        Trigger winTrigger = new Trigger(Config.WIN_TRIGGER_TAG, new Rectangle(
+            x * Config.TILE_SIZE,
+            y * Config.TILE_SIZE,
+            Config.TILE_SIZE,
+            Config.TILE_SIZE
+        ));
+        gameObjects.add(winTrigger);
+    }
+
     public static GameObject getCoin(int x, int y) {
         return new Coin(new Rectangle(
             x * Config.TILE_SIZE,
@@ -157,6 +171,10 @@ public class LevelBuilder {
                     addQuestion(x, y, getSuperMushroom(x, y));
                 } else if (color.equals(new Color(79, 32, 207))) {
                     addTurtle(x, y);
+                } else if (color.equals(new Color(203, 26, 141))) {
+                    addFlagPole(x, y);
+                } else if (color.equals(new Color(40, 251, 47))) {
+                    addWinTrigger(x, y);
                 }
             }
         }

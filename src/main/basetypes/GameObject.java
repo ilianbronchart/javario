@@ -8,7 +8,7 @@ import src.main.globals.Time;
 import src.main.utils.Utils;
 
 public class GameObject {
-    public String tag;
+    private String tag;
 
     public Image sprite;
 
@@ -32,6 +32,12 @@ public class GameObject {
     public boolean hasTriggeredScene;
 
     public ArrayList<GameObject> childGameObjects = new ArrayList<GameObject>();
+    
+    public GameObject(String tag, Image sprite, Rectangle rect){
+        this.tag = tag;
+        this.sprite = sprite;
+        this.rect = rect;
+    }
 
     public String getTriggeredScene() {
         return triggeredScene;
@@ -41,11 +47,9 @@ public class GameObject {
         hasTriggeredScene = true;
         triggeredScene = scene;
     }
-
-    public GameObject(String tag, Image sprite, Rectangle rect){
-        this.tag = tag;
-        this.sprite = sprite;
-        this.rect = rect;
+    
+    public boolean hasTag(String tag) {
+        return this.tag.equals(tag);
     }
 
     public void setSpriteOffset(String offsetType) {

@@ -23,7 +23,7 @@ public class Question extends GameObject {
     }
 
     public void onCollision(GameObject col, float dx, float dy) {
-        if (col.tag.equals(Config.MARIO_TAG)) {
+        if (col.hasTag(Config.MARIO_TAG)) {
             if (dy < 0) {
                 stateMachine.onEvent(Events.bounce);
             }
@@ -124,7 +124,7 @@ public class Question extends GameObject {
                 sprite = SpriteAtlas.question[0];
                 isEntity = true;
 
-                if (item.tag.equals(Config.COIN_TAG)) {
+                if (item.hasTag(Config.COIN_TAG)) {
                     item.isAwake = true;
                 }
             }
@@ -143,7 +143,7 @@ public class Question extends GameObject {
 
         public class OpenState extends State {
             public void onEnter(String event) {
-                if (item.tag.equals(Config.SUPER_MUSHROOM_TAG)) {
+                if (item.hasTag(Config.SUPER_MUSHROOM_TAG)) {
                     item.isAwake = true;
                 }
             }

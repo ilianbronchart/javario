@@ -4,6 +4,7 @@ import java.awt.*;
 
 import src.main.Config;
 import src.main.basetypes.Scene;
+import src.main.globals.Keys;
 
 public class SceneManager {
     Scene currentScene;
@@ -17,6 +18,7 @@ public class SceneManager {
 
         if(currentScene.nextScene != null){
             currentScene = queueScene(currentScene.nextScene);
+            Keys.resetKeys();
         }
     }
 

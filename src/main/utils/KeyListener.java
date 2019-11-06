@@ -7,18 +7,20 @@ import src.main.globals.Keys;
 
 public class KeyListener extends KeyAdapter {
     public void keyPressed(KeyEvent evt) {
+        if (Keys.inputFrozen()) { return; }
+        
         switch (evt.getKeyCode()) {
             case 87:
                 Keys.up = true;
                 break;
-                case 65:
+            case 65:
                 Keys.left = true;
                 break;
             case 83:
                 Keys.down = true;
                 break;
             case 68:
-                Keys.right = true;
+            Keys.right = true;
                 break;
             case 32:
                 Keys.space = true;
@@ -28,14 +30,16 @@ public class KeyListener extends KeyAdapter {
                 break;
         }
     }
-
+    
     public void keyReleased(KeyEvent evt){
+        if (Keys.inputFrozen()) { return; }
+
         switch (evt.getKeyCode()) {
             case 87:
                 Keys.up = false;
                 break;
             case 65:
-                Keys.left = false;
+            Keys.left = false;
                 break;
             case 83:
                 Keys.down = false;

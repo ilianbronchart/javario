@@ -9,6 +9,7 @@ public class SpriteAtlas extends SpriteSet {
     public static BufferedImage tileSet = getBufferedImage("tile_set.png");
     public static BufferedImage brick = tileSet.getSubimage(0, 0, 48, 48);
     public static BufferedImage superMushroom = tileSet.getSubimage(192, 48, 48, 48);
+    public static BufferedImage flag = tileSet.getSubimage(336, 0, 48, 48);
 
     // TURTLE
     public static Image[] turtleRun = {

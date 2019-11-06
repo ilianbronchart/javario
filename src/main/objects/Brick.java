@@ -29,7 +29,7 @@ public class Brick extends GameObject {
     }
 
     public void onCollision(GameObject col, float dx, float dy) {
-        if (col.tag.equals(Config.MARIO_TAG)) {
+        if (col.hasTag(Config.MARIO_TAG)) {
             if (dy < 0) {
                 Mario mario = (Mario) col;
 

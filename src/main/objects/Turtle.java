@@ -60,7 +60,7 @@ public class Turtle extends GameObject {
     }
 
     public void onCollision(GameObject col, float dx, float dy) {
-        if (col.tag.equals(Config.MARIO_TAG)) {
+        if (col.hasTag(Config.MARIO_TAG)) {
 
             if (stateMachine.state instanceof States.ShellState) {
                 shootShell((Mario) col);
@@ -71,11 +71,14 @@ public class Turtle extends GameObject {
                 stateMachine.onEvent(Events.squish);
                 return;
             }
-        } else if (col.tag.equals(Config.GOOMBA_TAG)) {
+        } else if (col.hasTag(Config.GOOMBA_TAG)) {
             if (stateMachine.state instanceof States.MoveShell) {
                 // Cancel collision
                 return;
             }
+        } else if (col.hasTag(Config.SUPER_MUSHROOM_TAG)) {
+            // Cancel collision
+            return;
         }
 
         if (dy > 0) {

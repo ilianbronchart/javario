@@ -30,6 +30,7 @@ public abstract class Config{
     
     // Velocities for different events
     public final static float JUMP_VELOCITY = -0.9f;
+    public final static float WIN_JUMP_VELOCITY = -0.4f;
     public final static float BUMP_VEL = 0.1f; // Velocity that mario gets when he bumps the underside of a collider
     public final static float MARIO_MAX_VELOCITY = 0.35f;
     public final static float MIN_STOP_VELOCITY = 0.02f;
@@ -46,4 +47,6 @@ public abstract class Config{
     public final static String QUESTION_TAG = "question";
     public final static String COIN_TAG = "coin";
     public final static String SUPER_MUSHROOM_TAG = "super_mushroom";
+    public final static String FLAGPOLE_TAG = "flagpole";
+    public final static String WIN_TRIGGER_TAG = "win_trigger";
 }
