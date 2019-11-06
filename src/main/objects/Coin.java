@@ -7,11 +7,12 @@ import src.main.globals.SpriteAtlas;
 import src.main.globals.Time;
 
 public class Coin extends GameObject {
-    Animation animation;
+    private Animation animation;
+    private boolean addedCoinScore = false;
 
     public Coin(Rectangle rect) {
         super(Config.COIN_TAG, SpriteAtlas.coin[0], rect);
-        isAwake = false;
+        setActive(false);
         hasCollider = false;
         animation = new Animation();
     }
@@ -19,17 +20,22 @@ public class Coin extends GameObject {
     public void update() {
         animation.animate();
         if (rect.pos.y >= animation.startHeight) {
-            isAwake = false;
+            setActive(false);
         }
+        
+        if (!addedCoinScore) {
+            ScoreSystem.addCoin();
+        }
+        addedCoinScore = true;
     }
 
-    class Animation {
-        int startHeight;
-        int animFrame = 0;
-        float animTimer = 0;
-        float bounceHeight = 0;
+    private class Animation {
+        private int startHeight;
+        private int animFrame = 0;
+        private float animTimer = 0;
+        private float bounceHeight = 0;
 
-        public Animation() {
+        private Animation() {
             startHeight = (int) rect.pos.y;
         }
 
@@ -44,7 +50,7 @@ public class Coin extends GameObject {
             rect.pos.y = startHeight - animFunction(bounceHeight);
         }
 
-        public float animFunction(float bounceHeight) {
+        private float animFunction(float bounceHeight) {
             return (float) -Math.pow((bounceHeight - 12), 2) + 144;
         }
     }

@@ -9,6 +9,11 @@ public class Vector2{
         this.y = y;
     }
 
+    public Vector2() {
+        this.x = 0;
+        this.y = 0;
+    }
+
     public Vector2 multiply(float val) {
         x *= val;
         y *= val;

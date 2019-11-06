@@ -9,43 +9,32 @@ import src.main.utils.Utils;
 
 public class GameObject {
     private String tag;
-
-    public Image sprite;
-
-    public Rectangle rect;
-    public Vector2 vel = new Vector2(0, 0);
-    public Vector2 spriteOffset = new Vector2(0, 0); // Offset between sprite and collider
-    
-    public boolean freezeMovement = false;
-    public boolean gravity = false;
-    public boolean isActivated = false; // Has entered the camera viewspace at some point
-    public boolean isAwake = true; // True by default, can be turned to false for custom behavior
-    public boolean hasCollider = true;
-    public boolean isEntity = false; // Indicates whether the GameObject should interact with other entities
-    public boolean flipSprite = false;
-    
-    public float friction = 1;
-    public float acceleration = 0;
-    public float maxVel = 0;
-
     private String triggeredScene; // GameObjects can trigger a scene change depending on events
-    public boolean hasTriggeredScene;
+    private boolean hasTriggeredScene;
 
-    public ArrayList<GameObject> childGameObjects = new ArrayList<GameObject>();
+    protected Image sprite;
+    protected Rectangle rect;
+    protected Vector2 vel = new Vector2();
+    protected Vector2 spriteOffset = new Vector2(); // Offset between sprite and collider
+    protected boolean gravity = false;
+    protected boolean isActive = true; // True by default, can be turned to false for custom behavior
+    protected boolean freezeMovement = false;
+    protected boolean enteredViewSpace = false; // Has entered the camera viewspace at some point
+    protected boolean hasCollider = true;
+    protected boolean isEntity = false; // Indicates whether the GameObject should interact with other entities
+    protected boolean flipSprite = false;
+    protected boolean fixedRender = false; // Render this object at a fixed position on screen (don't scroll)
+    protected boolean hasSpecializedRendering = false; // Some GameObjects might want to render their own subcomponents
+    protected float friction = 1;
+    protected float acceleration = 0;
+    protected float maxVel = 0;
+
+    protected ArrayList<GameObject> childGameObjects = new ArrayList<GameObject>();
     
     public GameObject(String tag, Image sprite, Rectangle rect){
-        this.tag = tag;
+        this.tag = tag == null ? "" : tag;
         this.sprite = sprite;
         this.rect = rect;
-    }
-
-    public String getTriggeredScene() {
-        return triggeredScene;
-    }
-
-    public void triggerScene(String scene) {
-        hasTriggeredScene = true;
-        triggeredScene = scene;
     }
     
     public boolean hasTag(String tag) {
@@ -65,7 +54,7 @@ public class GameObject {
         }
     }
 
-    public void setSprite(Image newSprite) {
+    protected void setSprite(Image newSprite) {
         if (sprite != newSprite) {
             sprite = newSprite;
         }
@@ -93,4 +82,27 @@ public class GameObject {
     public void onCollision (GameObject gameObject, float dx, float dy) {};
 
     public void update(){}
+
+    public void render(Graphics2D g2d){}
+
+    // _______________________ GETTERS AND SETTERS _______________________
+
+    
+    public void triggerScene(String scene) {
+        hasTriggeredScene = true;
+        triggeredScene = scene;
+    }
+    
+    public String getTriggeredScene() { return triggeredScene; }
+    public boolean isActive() { return isActive; }
+    public void setActive(boolean value) { isActive = value; }
+    public boolean isEntity() { return isEntity; }
+    public boolean hasTriggeredScene() { return hasTriggeredScene; }
+    public ArrayList<GameObject> getChildGameObjects() { return childGameObjects; }
+    public Image getSprite() { return sprite; }
+    public Vector2 getSpriteOffset() { return spriteOffset; }
+    public Rectangle rect() { return rect; }
+    public Vector2 vel() { return vel; }
+    public boolean enteredViewSpace() { return enteredViewSpace; }
+    public void setEnteredViewSpace(boolean value) { enteredViewSpace = value; };
 }

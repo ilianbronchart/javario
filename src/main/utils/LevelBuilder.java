@@ -10,15 +10,17 @@ import src.main.basetypes.Rectangle;
 import src.main.Config;
 
 public class LevelBuilder {
-    static ArrayList<GameObject> gameObjects;
-    static int w;
-    static int h;
-    static Integer startTileX = null;
-    static boolean foundEndTile = false;
-    static BufferedImage levelMap;
-    static BufferedImage emptyImg = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+    private static ArrayList<GameObject> gameObjects;
+    private static int w;
+    private static int h;
+    private static Integer startTileX = null;
+    private static boolean foundEndTile = false;
+    private static BufferedImage levelMap;
 
-    public static void addGroundCollider(int x, int y) {                 
+    private static void addGroundCollider(int x, int y) {    
+        x /= Config.TILE_SIZE;
+        y /= Config.TILE_SIZE;
+        
         if (startTileX == null) {
             startTileX = x;
         }
@@ -38,109 +40,65 @@ public class LevelBuilder {
                 Config.TILE_SIZE
             );
 
-            gameObjects.add(new GameObject("groundCollider", emptyImg, rect));
+            gameObjects.add(new GameObject("groundCollider", null, rect));
             
             startTileX = null;
             foundEndTile = false;
         }
     }
 
-    public static void addBrick(int x, int y, GameObject item) {
+    private static void addBrick(int x, int y, GameObject item) {
         Brick brick = new Brick(
-            new Rectangle(
-                x * Config.TILE_SIZE, 
-                y * Config.TILE_SIZE + 24, 
-                Config.TILE_SIZE, 
-                Config.TILE_SIZE
-            ),
+            new Rectangle(x, y + 24, Config.TILE_SIZE, Config.TILE_SIZE),
             item
         );
         gameObjects.add(item);
         gameObjects.add(brick);
     }
 
-    public static void addPipe(int x, int y) {
+    private static void addPipe(int x, int y) {
         int h = Config.FRAME_SIZE[1] - y;
-        Rectangle rect = new Rectangle(
-            x * Config.TILE_SIZE, 
-            y * Config.TILE_SIZE + 24, 
-            96,
-            h
-        );
-
-        gameObjects.add(new GameObject("pipe", emptyImg, rect));
+        gameObjects.add(new GameObject(Config.PIPE_TAG, null, new Rectangle(x, y + 24, 96, h)));
     }
 
-    public static void addGoomba(int x, int y) {
-        Goomba goomba = new Goomba(new Rectangle(
-            x * Config.TILE_SIZE, 
-            y * Config.TILE_SIZE + 24, 
-            Config.TILE_SIZE, 
-            Config.TILE_SIZE
-        ));
+    private static void addGoomba(int x, int y) {
+        Goomba goomba = new Goomba(new Rectangle(x, y + 24, Config.TILE_SIZE, Config.TILE_SIZE));
         gameObjects.add(goomba);
     }
 
-    public static void addQuestion(int x, int y, GameObject item) {
+    private static void addQuestion(int x, int y, GameObject item) {
         Question question = new Question(
-            new Rectangle(
-                x * Config.TILE_SIZE, 
-                y * Config.TILE_SIZE + 24, 
-                Config.TILE_SIZE, 
-                Config.TILE_SIZE
-            ),
+            new Rectangle(x, y + 24, Config.TILE_SIZE, Config.TILE_SIZE),
             item
         );
         gameObjects.add(item);
         gameObjects.add(question);
     }
 
-    public static void addTurtle(int x, int y) {
-        Turtle turtle = new Turtle(new Rectangle(
-            x * Config.TILE_SIZE,
-            y * Config.TILE_SIZE,
-            Config.TILE_SIZE,
-            72
-        ));
+    private static void addTurtle(int x, int y) {
+        Turtle turtle = new Turtle(new Rectangle(x, y, Config.TILE_SIZE, 72));
         gameObjects.add(turtle);
     }
 
-    public static void addFlagPole(int x, int y) {
-        FlagPole flagPole = new FlagPole(new Rectangle(
-            x * Config.TILE_SIZE,
-            y * Config.TILE_SIZE - 8 * Config.TILE_SIZE,
-            Config.TILE_SIZE,
-            456
-        ));
+    private static void addFlagPole(int x, int y) {
+        FlagPole flagPole = new FlagPole(new Rectangle(x, y - 8, Config.TILE_SIZE, 456));
         gameObjects.add(flagPole);
     }
 
-    public static void addWinTrigger(int x, int y) {
-        Trigger winTrigger = new Trigger(Config.WIN_TRIGGER_TAG, new Rectangle(
-            x * Config.TILE_SIZE,
-            y * Config.TILE_SIZE,
-            Config.TILE_SIZE,
-            Config.TILE_SIZE
+    private static void addWinTrigger(int x, int y) {
+        Trigger winTrigger = new Trigger(
+            Config.WIN_TRIGGER_TAG, 
+            new Rectangle(x, y, Config.TILE_SIZE, Config.TILE_SIZE
         ));
         gameObjects.add(winTrigger);
     }
 
-    public static GameObject getCoin(int x, int y) {
-        return new Coin(new Rectangle(
-            x * Config.TILE_SIZE,
-            y * Config.TILE_SIZE + 24, 
-            Config.TILE_SIZE, 
-            Config.TILE_SIZE
-        ));
+    private static GameObject getCoin(int x, int y) {
+        return new Coin(new Rectangle(x, y + 24, Config.TILE_SIZE, Config.TILE_SIZE));
     }
 
-    public static GameObject getSuperMushroom(int x, int y) {
-        return new SuperMushroom(new Rectangle(
-            x * Config.TILE_SIZE,
-            y * Config.TILE_SIZE + 24, 
-            Config.TILE_SIZE, 
-            Config.TILE_SIZE
-        ));
+    private static GameObject getSuperMushroom(int x, int y) {
+        return new SuperMushroom(new Rectangle(x, y + 24, Config.TILE_SIZE, Config.TILE_SIZE));
     }
 
     public static ArrayList<GameObject> buildLevel (BufferedImage map) {
@@ -155,61 +113,54 @@ public class LevelBuilder {
             for (int x = 0; x < w; x++) {
                 int pixelData = levelMap.getRGB(x, y);
                 Color color = new Color(pixelData);
+                x *= Config.TILE_SIZE;
+                y *= Config.TILE_SIZE;
                 
-                if (color.equals(Color.BLUE)) {                    
-                    // Static ground colliders, which are grouped together for optimization
+                if (color.equals(colors.groundCollider)) {
                     addGroundCollider(x, y);
-                } else if (color.equals(new Color(100, 100, 100))) {
+                }
+                else if (color.equals(colors.brick)) {
                     addBrick(x, y, getCoin(x,y));
-                } else if (color.equals(Color.RED)) {
+                } 
+                else if (color.equals(colors.pipe)) {
                     addPipe(x, y);
-                } else if (color.equals(new Color(124, 66, 0))) {
+                } 
+                else if (color.equals(colors.goomba)) {
                     addGoomba(x, y);
-                } else if (color.equals(Color.YELLOW)) {
+                } 
+                else if (color.equals(colors.coinQuestion)) {
                     addQuestion(x, y, getCoin(x,y));
-                } else if (color.equals(new Color(100, 255, 100))) {
+                } 
+                else if (color.equals(colors.mushroomQuestion)) {
                     addQuestion(x, y, getSuperMushroom(x, y));
-                } else if (color.equals(new Color(79, 32, 207))) {
+                } 
+                else if (color.equals(colors.turtle)) {
                     addTurtle(x, y);
-                } else if (color.equals(new Color(203, 26, 141))) {
+                } 
+                else if (color.equals(colors.flagPole)) {
                     addFlagPole(x, y);
-                } else if (color.equals(new Color(40, 251, 47))) {
+                } 
+                else if (color.equals(colors.winTrigger)) {
                     addWinTrigger(x, y);
                 }
+
+                x /= Config.TILE_SIZE;
+                y /= Config.TILE_SIZE;
             }
         }
 
         return gameObjects;
     }
+
+    private interface colors {
+        final Color groundCollider = Color.BLUE;
+        final Color brick = new Color(100, 100, 100);
+        final Color pipe = Color.RED;
+        final Color goomba = new Color(124, 66, 0);
+        final Color coinQuestion = Color.YELLOW;
+        final Color mushroomQuestion = new Color(100, 255, 100);
+        final Color turtle = new Color(79, 32, 207);
+        final Color flagPole = new Color(203, 26, 141);
+        final Color winTrigger = new Color(40, 251, 47);
+    }
 }
-
-// for y in range(0, level_1.size[1]):
-//     for x in range(0, level_1.size[0]):
-
-//         color = level_1.getpixel((x, y))
-//         pos = Vector2(x * c.TILE_SIZE, y * c.TILE_SIZE + 24)
-
-//         #Yellow = Question tile with coin as item
-//         elif color == c.YELLOW:
-//             coin_rect = Rectangle(Vector2(pos.x, pos.y), 48, 42)
-//             contents = Coin(coin_rect)
-//             coins.append(contents)
-//             rect = Rectangle(pos, c.TILE_SIZE, c.TILE_SIZE)
-//             dynamic_colliders.append(Question(rect, contents))
-
-//         #Green = Question tile with mushroom as item
-//         elif color == c.GREEN:
-//             mushroom_rect = Rectangle(Vector2(pos.x, pos.y), c.TILE_SIZE, c.TILE_SIZE)
-//             contents = Super_Mushroom(mushroom_rect, Vector2(c.MUSHROOM_START_VEL_X, 0))
-//             super_mushrooms.append(contents)
-//             rect = Rectangle(pos, c.TILE_SIZE, c.TILE_SIZE)
-//             dynamic_colliders.append(Question(rect, contents))
-
-//         #Brown = Goomba
-//         elif color == c.BROWN:
-//             rect = Rectangle(pos, c.TILE_SIZE, c.TILE_SIZE)
-//             enemies.append(Goomba(rect, Vector2()))
-
-//         elif color == c.PURPLE:
-//             rect = Rectangle(Vector2(pos.x, pos.y - 24), 48, 72)
-//             enemies.append(Turtle(rect, Vector2()))

@@ -7,7 +7,7 @@ import src.main.basetypes.Scene;
 import src.main.globals.Keys;
 
 public class SceneManager {
-    Scene currentScene;
+    private Scene currentScene;
 
     public SceneManager(){
         currentScene = queueScene(Config.Scenes.MAIN_MENU);
@@ -16,8 +16,8 @@ public class SceneManager {
     public void updateScene(){
         currentScene.update();
 
-        if(currentScene.nextScene != null){
-            currentScene = queueScene(currentScene.nextScene);
+        if(currentScene.getNextScene() != null){
+            currentScene = queueScene(currentScene.getNextScene());
             Keys.resetKeys();
         }
     }
@@ -26,7 +26,7 @@ public class SceneManager {
         currentScene.render(g2d);
     }
 
-    public Scene queueScene(String nextScene) {
+    private Scene queueScene(String nextScene) {
         switch (nextScene) {
             case Config.Scenes.MAIN_MENU:
                 return new MainMenu();

@@ -9,17 +9,17 @@ import src.main.globals.Time;
 import src.main.Config;
 
 public class Question extends GameObject {
-    States states = new States();
-    StateMachine stateMachine;
-    Animation animation;
-    GameObject item;
+    private States states = new States();
+    private StateMachine stateMachine;
+    private Animation animation;
+    private GameObject item;
 
     public Question(Rectangle rect, GameObject item) {
         super(Config.QUESTION_TAG, SpriteAtlas.question[1], rect);
         this.item = item;
         animation = new Animation();
         stateMachine = new StateMachine(states.new IdleState());
-        isActivated = true; // For synchronized animations
+        enteredViewSpace = true; // For synchronized animations
     }
 
     public void onCollision(GameObject col, float dx, float dy) {
@@ -30,12 +30,15 @@ public class Question extends GameObject {
         }
     }
 
-    class Animation {
-        float animTimer = 0;
-        int animFrame = 0;
-        int startHeight;
-        int[] idleFrames = {1, 2, 3, 2, 1};
-        boolean doneAnimating = false;
+    public State getState() {
+        return stateMachine.getState();
+    }
+
+    private class Animation {
+        private float animTimer = 0;
+        private int animFrame = 0;
+        private int startHeight;
+        private int[] idleFrames = {1, 2, 3, 2, 1};
 
         public Animation() {
             this.startHeight = (int) rect.pos.y;
@@ -54,23 +57,22 @@ public class Question extends GameObject {
             }
         }
 
-        public int bounceAnimFunction(int frame) {
+        private int bounceAnimFunction(int frame) {
             return -Math.abs(frame * 4 - 24) + 24;
         }
 
         public void idleAnim() {
             animTimer += Time.deltaTime;
-            if (animTimer > 6 * Time.deltaTime) {
-                doneAnimating = false;
-                setSprite(SpriteAtlas.question[idleFrames[animFrame]]);
-                animFrame++;
-                animTimer = 0;
-            }
-
-            // Animation is on the last frame
-            if (animFrame == 5) {
-                doneAnimating = true;
-                animFrame = 0;
+            if (animTimer > 7 * Time.deltaTime * animFrame) {
+                if (animTimer > 7 * 7 * Time.deltaTime && animFrame >= 5) {
+                    animTimer = 0;
+                    animFrame = 0;
+                }
+                
+                if (animFrame < 5) {
+                    setSprite(SpriteAtlas.question[idleFrames[animFrame]]);
+                    animFrame++;
+                }
             }
         }
     }
@@ -79,14 +81,13 @@ public class Question extends GameObject {
         stateMachine.update();
     }
 
-    interface Events {
+    private interface Events {
         String bounce = "bounce";
         String open = "open";
     }
 
     public class States implements Events {
         public class IdleState extends State {
-            float doAnimationTimer;
 
             public State onEvent(String event) {
                 if (event.equals(bounce)) {
@@ -97,13 +98,7 @@ public class Question extends GameObject {
             }
 
             public void update() {
-                doAnimationTimer += Time.deltaTime;
-                if (doAnimationTimer > 5 * Time.deltaTime) {
-                    animation.idleAnim();
-                    if (animation.doneAnimating) {
-                        doAnimationTimer = 0;
-                    }
-                }
+                animation.idleAnim();
             }
 
             public void onExit() {
@@ -125,7 +120,7 @@ public class Question extends GameObject {
                 isEntity = true;
 
                 if (item.hasTag(Config.COIN_TAG)) {
-                    item.isAwake = true;
+                    item.setActive(true);
                 }
             }
 
@@ -144,7 +139,7 @@ public class Question extends GameObject {
         public class OpenState extends State {
             public void onEnter(String event) {
                 if (item.hasTag(Config.SUPER_MUSHROOM_TAG)) {
-                    item.isAwake = true;
+                    item.setActive(true);
                 }
             }
         }

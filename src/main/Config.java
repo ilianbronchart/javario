@@ -1,6 +1,8 @@
 package src.main;
 
 import java.awt.*;
+import src.main.basetypes.*;
+import src.main.basetypes.Rectangle;
 
 public abstract class Config{
 
@@ -29,11 +31,12 @@ public abstract class Config{
     public final static float BRAKE_FRICTION = 0.90f;
     
     // Velocities for different events
-    public final static float JUMP_VELOCITY = -0.9f;
-    public final static float WIN_JUMP_VELOCITY = -0.4f;
-    public final static float BUMP_VEL = 0.1f; // Velocity that mario gets when he bumps the underside of a collider
-    public final static float MARIO_MAX_VELOCITY = 0.35f;
-    public final static float MIN_STOP_VELOCITY = 0.02f;
+    public final static float JUMP_VEL = -0.9f;
+    public final static float GOOMBA_SQUISH_JUMP_VEL = -0.4f;
+    public final static float WIN_JUMP_VEL = -0.4f;
+    public final static float BUMP_VEL = 0.1f; // VEL that mario gets when he bumps the underside of a collider
+    public final static float MARIO_MAX_VEL = 0.35f;
+    public final static float MIN_STOP_VEL = 0.02f;
     public final static float ENTITY_START_VEL_X = 0.1f;
     public final static float GOOMBA_KNOCKED_VEL = -0.8f;
     public final static float COIN_BOUNCE_SPEED = 0.6f;
@@ -49,4 +52,29 @@ public abstract class Config{
     public final static String SUPER_MUSHROOM_TAG = "super_mushroom";
     public final static String FLAGPOLE_TAG = "flagpole";
     public final static String WIN_TRIGGER_TAG = "win_trigger";
+    public final static String SCORESYSTEM_TAG = "score_system";
+    public final static String PIPE_TAG = "pipe";
+    
+    // SCORE
+    public final static int TURTLE_SCORE = 300;
+    public final static int GOOMBA_SCORE = 1000;
+    public final static int MUSHROOM_SCORE = 100;
+    public final static int TIME_SCORE = 1000;
+
+    public static class MainMenu {
+        public final static Rectangle SELECTOR_RECT = new Rectangle(239, 404, 0, 0);
+        public final static Vector2[] SELECTOR_POSITIONS = {
+            new Vector2(239, 404),
+            new Vector2(239, 448)
+        };
+    }
+
+    public static class LevelOne {
+        public final static int TIME = 400;
+        public final static int MAX_SCROLL = 9050; // Furthest distance the camera can scroll to
+        public final static Vector2 CAMERA_START_POS = new Vector2();
+        public final static Vector2 FOREGROUND_POS = new Vector2(9840, 504);
+        public final static Rectangle MARIO_RECT = new Rectangle(138, 552, 36, 48);
+
+    }
 }

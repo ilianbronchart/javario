@@ -20,16 +20,16 @@ public class FlagPole extends GameObject {
     public void onCollision(GameObject other, float dx, float dy) {
         if (other.hasTag(Config.MARIO_TAG)) {
             animateFlag = true;
-            if (other.rect.pos.y + other.rect.h > rect.pos.y + rect.h - 20) {
+            if (other.rect().pos.y + other.rect().h > rect.pos.y + rect.h - 20) {
                 hasCollider = false;
-                isAwake = false;
+                setActive(false);
             }
         }
     }
 
-    public class Flag extends GameObject {
+    private class Flag extends GameObject {
         public Flag(Rectangle rect) {
-            super("", SpriteAtlas.flag, rect);
+            super(null, SpriteAtlas.flag, rect);
             hasCollider = false;
         }
 

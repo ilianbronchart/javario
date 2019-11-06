@@ -15,13 +15,12 @@ import src.main.utils.KeyListener;
 
 public class Main {
     public static Canvas canvas;
-    public static SceneManager sceneManager = new SceneManager();
     
-    JFrame frame = new JFrame();
-    Component keyListener = new JTextField();
-    long currentTime = 0;
-    long fpsStartTime = 0;
-    int fpsCounter = 0;
+    private SceneManager sceneManager = new SceneManager();
+    private JFrame frame = new JFrame();
+    private long currentTime = 0;
+    private long fpsStartTime = 0;
+    private int fpsCounter = 0;
 
     public Main() {
         canvas = new Canvas();
@@ -44,14 +43,8 @@ public class Main {
         }
     }
 
-    public void update() throws InterruptedException {
-        // Calculate framerate
-        if (System.currentTimeMillis() - fpsStartTime > 1000){
-            fpsStartTime = System.currentTimeMillis();
-            // System.out.println(fpsCounter);
-            fpsCounter = 0;
-        }
-        fpsCounter++;
+    private void update() throws InterruptedException {
+        // printFramerate();
 
         // Calculate deltatime to keep physics at a constant speed
         long prevTime = currentTime;
@@ -67,7 +60,16 @@ public class Main {
         TimeUnit.MILLISECONDS.sleep(Math.max(1000/60 - elapsedTime, 0));
     }
 
-    public void updateKeyPressed() {
+    private void printFramerate() {
+        if (System.currentTimeMillis() - fpsStartTime > 1000){
+            fpsStartTime = System.currentTimeMillis();
+            System.out.println(fpsCounter);
+            fpsCounter = 0;
+        }
+        fpsCounter++;
+    }
+
+    private void updateKeyPressed() {
         // For behaviors that require checking if a key is being held
 
         Keys.upPressed = Keys.up;
@@ -78,7 +80,7 @@ public class Main {
         Keys.enterPressed = Keys.enter;
     }
 
-    public class Canvas extends JPanel {
+    private class Canvas extends JPanel {
         // The main canvas component, where every sprite is drawn on
 
         private static final long serialVersionUID = 1L;

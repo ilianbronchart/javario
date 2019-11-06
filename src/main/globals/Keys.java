@@ -18,6 +18,7 @@ public class Keys {
 
     public static void freezeInput() {
         inputFrozen = true;
+        resetKeys();
     }
 
     public static void unFreezeInput() {

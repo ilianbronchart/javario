@@ -9,14 +9,12 @@ import src.main.globals.Time;
 import src.main.Config;
 
 public class Turtle extends GameObject {
-    public StateMachine stateMachine;
-    public States states = new States();
-    Animation animation;
-
-    boolean canKill = false;
+    private StateMachine stateMachine;
+    private States states = new States();
+    private Animation animation;
 
     public Turtle(Rectangle rect) {
-        super(Config.TURTLE_TAG, SpriteAtlas.turtleRun[0], rect);
+        super(Config.TURTLE_TAG, SpriteAtlas.Turtle.run[0], rect);
         gravity = true;
         isEntity = true;
         animation = new Animation();
@@ -28,8 +26,12 @@ public class Turtle extends GameObject {
         stateMachine.update();
     }
 
+    public State getState() {
+        return stateMachine.getState();
+    }
+
     @Override
-    public void setSprite(Image newSprite) {
+    protected void setSprite(Image newSprite) {
         if (newSprite != sprite) {
             setCollider(rect.w, newSprite.getHeight(null));
             sprite = newSprite;
@@ -37,13 +39,13 @@ public class Turtle extends GameObject {
     }
 
     private void shootShell(Mario mario) {
-        if (mario.rect.pos.x + mario.rect.w < rect.pos.x + rect.w / 2) {
+        if (mario.rect().pos.x + mario.rect().w < rect.pos.x + rect.w / 2) {
             vel.x = 0.5f;
-        } else if (mario.rect.pos.x + mario.rect.w > rect.pos.x + rect.w / 2) {
+        } else if (mario.rect().pos.x + mario.rect().w > rect.pos.x + rect.w / 2) {
             vel.x = -0.5f;
-        } else if (mario.vel.x < 0) {
+        } else if (mario.vel().x < 0) {
             vel.x = -0.5f;
-        } else if (mario.vel.y > 0) {
+        } else if (mario.vel().y > 0) {
             vel.x = 0.5f;
         } else {
             vel.x = -0.5f;
@@ -53,26 +55,26 @@ public class Turtle extends GameObject {
 
         // Move the turtle outside of mario's hitbox, so mario doesn't get killed
         if (vel.x > 0) {
-            rect.pos.x = mario.rect.pos.x + mario.rect.w;
+            rect.pos.x = mario.rect().pos.x + mario.rect().w;
         } else if (vel.x < 0) {
-            rect.pos.x = mario.rect.pos.x - rect.w;
+            rect.pos.x = mario.rect().pos.x - rect.w;
         }
     }
 
     public void onCollision(GameObject col, float dx, float dy) {
         if (col.hasTag(Config.MARIO_TAG)) {
 
-            if (stateMachine.state instanceof States.ShellState) {
+            if (stateMachine.getState() instanceof States.ShellState) {
                 shootShell((Mario) col);
-                return;
             }
 
-            if (col.rect.pos.y + col.rect.h - dy * Time.deltaTime < rect.pos.y) {
+            if (col.rect().pos.y + col.rect().h - dy * Time.deltaTime < rect.pos.y) {
                 stateMachine.onEvent(Events.squish);
-                return;
             }
+
+            return;
         } else if (col.hasTag(Config.GOOMBA_TAG)) {
-            if (stateMachine.state instanceof States.MoveShell) {
+            if (stateMachine.getState() instanceof States.MoveShell) {
                 // Cancel collision
                 return;
             }
@@ -88,7 +90,7 @@ public class Turtle extends GameObject {
         }
     }
 
-    public class Animation {
+    private class Animation {
         private double animTimer = 0;
         private int animFrame = 0;
 
@@ -96,13 +98,13 @@ public class Turtle extends GameObject {
             if (animTimer > 13 * Time.deltaTime) {
                 animFrame++;
                 animTimer = 0;
-                setSprite(SpriteAtlas.turtleRun[animFrame % 2]);
+                setSprite(SpriteAtlas.Turtle.run[animFrame % 2]);
             }
             animTimer += Time.deltaTime;
         }
     }
 
-    interface Events {
+    private interface Events {
         String squish = "squish";
         String moveShell = "move_shell";
     }
@@ -134,34 +136,13 @@ public class Turtle extends GameObject {
             }
 
             public void onEnter(String event) {
-                setSprite(SpriteAtlas.turtleShell);
+                setSprite(SpriteAtlas.Turtle.shell);
                 vel.x = 0;
+
+                ScoreSystem.addScore(Config.TURTLE_SCORE);
             }
         } 
 
-        public class MoveShell extends State {
-
-        }
+        public class MoveShell extends State {}
     }
 }
-
-
-//             if dx > 0:
-//                 self.pos.x = other_collider.pos.x - self.rect.w
-//                 self.vel.x = -self.vel.x
-//             elif dx < 0:
-//                 self.pos.x = other_collider.pos.x + other_collider.rect.w
-//                 self.vel.x = -self.vel.x
-//             elif dy > 0:
-//                 self.pos.y = other_collider.pos.y - self.rect.h
-//                 self.vel.y = 0
-
-//         if other_enemy is not None:
-//             if self.state_machine.get_state() != 'Move_Shell':
-//                 self.pos.x -= dx * c.delta_time
-//                 self.vel.x = -self.vel.x
-//             else:
-//                 other_enemy.state_machine.on_event('knocked')
-//                 other_enemy.is_active = True
-
-

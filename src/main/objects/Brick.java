@@ -11,11 +11,10 @@ import src.main.globals.SpriteAtlas;
 import src.main.globals.Time;
 
 public class Brick extends GameObject {
-    GameObject item;
-    States states = new States();
-    Animation animation;
-    StateMachine stateMachine;
-    boolean destroyed = false;
+    private GameObject item;
+    private States states = new States();
+    private Animation animation;
+    private StateMachine stateMachine;
 
     public Brick(Rectangle rect, GameObject item) {
         super(Config.BRICK_TAG, SpriteAtlas.brick, rect);
@@ -33,7 +32,7 @@ public class Brick extends GameObject {
             if (dy < 0) {
                 Mario mario = (Mario) col;
 
-                if(mario.marioStates.state instanceof Mario.States.SmallMario) {
+                if(mario.getMarioState() instanceof Mario.States.SmallMario) {
                     stateMachine.onEvent(Events.bounce);
                 } else {
                     stateMachine.onEvent(Events.smash);
@@ -42,11 +41,11 @@ public class Brick extends GameObject {
         }
     }
 
-    public class Animation {
-        int animFrame = 0;
-        int startHeight;
+    private class Animation {
+        private int animFrame = 0;
+        private int startHeight;
 
-        public Animation() {
+        private Animation() {
             this.startHeight = (int) rect.pos.y;
         }
 
@@ -58,9 +57,13 @@ public class Brick extends GameObject {
             }
         }
 
-        public int bounceAnimFunction(int frame) {
+        private int bounceAnimFunction(int frame) {
             return -Math.abs(frame * 4 - 24) + 24;
         }
+    }
+
+    public State getState() {
+        return stateMachine.getState();
     }
 
     public interface Events {
@@ -70,6 +73,7 @@ public class Brick extends GameObject {
     }
 
     public class States implements Events {
+
         public class IdleState extends State {
             public State onEvent(String event) {
                 switch (event) {
@@ -98,7 +102,7 @@ public class Brick extends GameObject {
 
             public void onEnter(String event) {
                 isEntity = true;
-                item.isAwake = true;
+                item.setActive(true);
             }
 
             public void update() {
@@ -116,13 +120,13 @@ public class Brick extends GameObject {
                 childGameObjects.add(new BrickFragment(new Vector2(rect.pos.x, rect.pos.y + 24), new Vector2(-0.1f, -0.4f)));
                 childGameObjects.add(new BrickFragment(new Vector2(rect.pos.x + 24, rect.pos.y + 24), new Vector2(0.1f, -0.4f)));
 
-                isAwake = false;
                 hasCollider = false;
+                setActive(false);
             }
         }
     }
 
-    protected class BrickFragment extends GameObject {
+    private class BrickFragment extends GameObject {
         private int animFrame = 0;
         private float animTimer = 0;
 
@@ -131,7 +135,7 @@ public class Brick extends GameObject {
             vel = startVel;
             hasCollider = false;
             gravity = true;
-            isAwake = true;
+            setActive(true);
         }
 
         public void update() {
@@ -142,7 +146,7 @@ public class Brick extends GameObject {
             animTimer += Time.deltaTime;
 
             if (rect.pos.y > Config.FRAME_SIZE[1]) {
-                isAwake = false;
+                setActive(false);
             }
         }
     }

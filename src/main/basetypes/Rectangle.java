@@ -11,6 +11,12 @@ public class Rectangle {
         this.h = h;
     }
 
+    public Rectangle() {
+        this.pos = new Vector2();
+        this.w = 0;
+        this.h = 0;
+    }
+
     public boolean overlaps(Rectangle other) {
         return !(other.pos.x + other.w <= pos.x ||
                  other.pos.x >= pos.x + w ||

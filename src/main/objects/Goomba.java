@@ -9,11 +9,10 @@ import src.main.globals.SpriteAtlas;
 import src.main.globals.Time;
 
 public class Goomba extends GameObject {
-    Animation animation;
-    StateMachine stateMachine;
-    States states = new States();
-
-    float squishTimer = 0;
+    private Animation animation;
+    private StateMachine stateMachine;
+    private States states = new States();
+    private float squishTimer = 0;
 
     public Goomba(Rectangle rect) {
         super(Config.GOOMBA_TAG, SpriteAtlas.goomba[0], rect);
@@ -33,26 +32,26 @@ public class Goomba extends GameObject {
 
     public void onCollision (GameObject col, float dx, float dy) {
         if (col.hasTag(Config.MARIO_TAG)) {
-            if (col.rect.pos.y + col.rect.h - dy * Time.deltaTime < rect.pos.y) {
+            if (col.rect().pos.y + col.rect().h - dy * Time.deltaTime < rect.pos.y) {
                 // Mario is squishing this goomba
                 stateMachine.onEvent(Events.squish);
             }
             return;
         } else if (col.hasTag(Config.BRICK_TAG)) {
             Brick brick = (Brick) col;
-            if (!(brick.stateMachine.state instanceof Brick.States.IdleState)) {
+            if (!(brick.getState() instanceof Brick.States.IdleState)) {
                 stateMachine.onEvent(Events.knocked);
                 return;
             }
         } else if (col.hasTag(Config.QUESTION_TAG)) {
             Question question = (Question) col;
-            if (question.stateMachine.state instanceof Question.States.BounceState) {
+            if (question.getState() instanceof Question.States.BounceState) {
                 stateMachine.onEvent(Events.knocked);
                 return;
             }
         } else if (col.hasTag(Config.TURTLE_TAG)) {
             Turtle turtle = (Turtle) col;
-            if (turtle.stateMachine.state instanceof Turtle.States.MoveShell) {
+            if (turtle.getState() instanceof Turtle.States.MoveShell) {
                 stateMachine.onEvent(Events.knocked);
                 return;
             }
@@ -68,9 +67,9 @@ public class Goomba extends GameObject {
         }
     }
 
-    public class Animation {
-        float animTimer = 0;
-        int animFrame = 0;
+    private class Animation {
+        private float animTimer = 0;
+        private int animFrame = 0;
 
         public void runAnim() {
             sprite = SpriteAtlas.goomba[animFrame % 2];
@@ -82,7 +81,7 @@ public class Goomba extends GameObject {
         }
     }
 
-    public static interface Events {
+    private static interface Events {
         static String knocked = "knocked";
         static String squish = "squish";
         static String dead = "dead";
@@ -119,8 +118,8 @@ public class Goomba extends GameObject {
                 vel.y = Config.GOOMBA_KNOCKED_VEL;
                 sprite = SpriteAtlas.goomba[3];
                 hasCollider = false;
-                // TODO: totalScore += goomba score
-                // TODO: sounds.kick.play();
+                
+                ScoreSystem.addScore(Config.GOOMBA_SCORE);
             }
 
             public void update() {
@@ -143,6 +142,8 @@ public class Goomba extends GameObject {
                 squishTimer += Time.deltaTime;
                 hasCollider = false;
                 freezeMovement = true;
+
+                ScoreSystem.addScore(Config.GOOMBA_SCORE);
             }
             
             public void update() {
@@ -152,7 +153,7 @@ public class Goomba extends GameObject {
 
         public class DeadState extends State {
             public void onEnter(String event) {
-                isAwake = false;
+                setActive(false);
             }
         }
 

@@ -2,8 +2,8 @@ package src.main.basetypes;
 
 public class StateMachine {
     // Manages states of GameObjects
-    public State state;
-    public boolean enabled = true;
+    private State state;
+    private boolean enabled = true;
 
     public StateMachine(State initialState) {
         state = initialState;
@@ -15,6 +15,10 @@ public class StateMachine {
 
     public void enable() {
         enabled = true;
+    }
+    
+    public State getState() {
+        return state;
     }
 
     public void onEvent(String event) {

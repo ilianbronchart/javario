@@ -11,31 +11,29 @@ import src.main.globals.Time;
 import src.main.objects.Mario.States.BigMario;
 
 public class Mario extends GameObject {
-    States states = new States();
-    StateMachine actionStates;
-    StateMachine marioStates;
-    Animation animation;
+    private States states = new States();
+    private StateMachine actionStates;
+    private StateMachine marioStates;
+    private Animation animation;
 
-    boolean isJumping = false;
-    boolean winCondition = false;
+    private boolean isJumping = false;
 
-    boolean isInvincible = false; // Brief period of invincibility after mario shrinks
+    private boolean isInvincible = false; // Brief period of invincibility after mario shrinks
     private double invincibilityTimer = 0;
 
     public Mario(String tag, Rectangle rect){
-        super(tag, Sprites.smallMarioIdle, rect);
+        super(tag, SpriteAtlas.Mario.smallMarioIdle, rect);
         setSpriteOffset("CenterHorizontal");
         gravity = true;
         isEntity = true;
         animation = new Animation();
         marioStates = new StateMachine(states.new SmallMario());
         actionStates = new StateMachine(states.new IdleState());
-        maxVel = Config.MARIO_MAX_VELOCITY;
+        maxVel = Config.MARIO_MAX_VEL;
     }
     
     @Override
     public void update() {
-        handleWinCondition();
         actionStates.update();
         stateEvents();
         marioStates.update();
@@ -49,7 +47,7 @@ public class Mario extends GameObject {
         }
     }
 
-    public void handleInvincibility() {
+    private void handleInvincibility() {
         if (isInvincible) {
             if (invincibilityTimer > 80 * Time.deltaTime) {
                 isInvincible = false;
@@ -59,18 +57,13 @@ public class Mario extends GameObject {
         }
     }
 
-    public void handleWinCondition() {
-        if (winCondition) {
-            Keys.right = true;
-        }
-    }
-
-    public void stateEvents() {
+    private void stateEvents() {
         if (freezeMovement) {  return; }
 
         if (vel.y == 0) {
             if (Keys.space && !Keys.spacePressed && !isJumping) {
                 actionStates.onEvent(Events.jump);
+                vel.y = Config.JUMP_VEL;
             } else {
                 
                 if(Keys.left || Keys.right) {
@@ -82,13 +75,13 @@ public class Mario extends GameObject {
                     
                 } else if (vel.x != 0) {
                     actionStates.onEvent(Events.decel);
-                }
+                } 
                 
-                if (Math.abs(vel.x) < Config.MIN_STOP_VELOCITY && acceleration == 0) {
+                if (Math.abs(vel.x) < Config.MIN_STOP_VEL) {
                     actionStates.onEvent(Events.idle);
                 }
 
-                if(Keys.down && marioStates.state instanceof BigMario){
+                if(Keys.down && marioStates.getState() instanceof BigMario){
                     actionStates.onEvent(Events.crouch);
                 }
             }
@@ -96,20 +89,27 @@ public class Mario extends GameObject {
             // When mario falls off a ledge
             actionStates.onEvent(Events.falling);
         } else if (vel.y < 0) {
-            // When mario is "jumping" but not int JumpState
-            actionStates.onEvent(Events.resumeJump);
+            // When mario should be "jumping" but is not in JumpState
+            if (!(actionStates.getState() instanceof States.JumpState)) {
+                actionStates.onEvent(Events.resumeJump);
+            }
+        }
+
+        if (rect.pos.y > Config.FRAME_SIZE[1] || ScoreSystem.getTime() == 0) {
+            marioStates.onEvent(Events.dead);
         }
     }
 
     public void onCollision(GameObject col, float dx, float dy) {
         if (col.hasTag(Config.GOOMBA_TAG)) {
-            if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect.pos.y) {
+            if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect().pos.y) {
                 // Mario is squishing the goomba
                 actionStates.onEvent(Events.jump);
-                rect.pos.y = col.rect.pos.y - rect.h;
+                vel.y = Config.GOOMBA_SQUISH_JUMP_VEL;
+                rect.pos.y = col.rect().pos.y - rect.h;
             } else {
                 // Mario is running into the goomba
-                if (marioStates.state instanceof States.BigMario) {
+                if (marioStates.getState() instanceof States.BigMario) {
                     actionStates.onEvent(Events.shrink);
                 }
 
@@ -124,16 +124,15 @@ public class Mario extends GameObject {
         if (col.hasTag(Config.TURTLE_TAG)) {
             Turtle turtle = (Turtle) col;   
 
-            if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect.pos.y) {
+            if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect().pos.y) {
                 // Mario is squishing the turtle
-                if (!(turtle.stateMachine.state instanceof Turtle.States.ShellState)) {
+                if (!(turtle.getState() instanceof Turtle.States.ShellState)) {
                     actionStates.onEvent(Events.jump);
                 }
             } else {
                 // Mario is running into the turtle
-                if (!(turtle.stateMachine.state instanceof Turtle.States.ShellState)) {
-                    System.out.println(turtle.stateMachine.state);
-                    if (marioStates.state instanceof States.BigMario) {
+                if (!(turtle.getState() instanceof Turtle.States.ShellState)) {
+                    if (marioStates.getState() instanceof States.BigMario) {
                         actionStates.onEvent(Events.shrink);
                     }
 
@@ -147,19 +146,22 @@ public class Mario extends GameObject {
         }
 
         if (col.hasTag(Config.SUPER_MUSHROOM_TAG)) {
-            if (marioStates.state instanceof States.SmallMario) {
+            if (marioStates.getState() instanceof States.SmallMario) {
                 actionStates.onEvent(Events.grow);
             }
+
+            return;
         }
 
         if (col.hasTag(Config.FLAGPOLE_TAG)) {
-            if (rect.pos.y < col.rect.pos.y + col.rect.h) {
-                rect.pos.x = col.rect.pos.x + 30;
+            if (rect.pos.y < col.rect().pos.y + col.rect().h) {
+                rect.pos.x = col.rect().pos.x + 30;
                 actionStates.onEvent(Events.flagPole);
             } 
 
-            if (rect.pos.y + rect.h > col.rect.pos.y + col.rect.h - 20) {
-                actionStates.onEvent(Events.win);
+            if (rect.pos.y + rect.h > col.rect().pos.y + col.rect().h - 20) {
+                actionStates.onEvent(Events.jump);
+                vel.y = Config.WIN_JUMP_VEL;
             }
             return;
         }
@@ -180,7 +182,7 @@ public class Mario extends GameObject {
     }
 
     @Override
-    public void setSprite(Image newSprite) {
+    protected void setSprite(Image newSprite) {
         if (newSprite != sprite) {
             setSpriteOffset("CenterHorizontal");
             setCollider(rect.w, newSprite.getHeight(null));
@@ -188,50 +190,7 @@ public class Mario extends GameObject {
         }
     }
 
-    static class Sprites extends SpriteSet {
-        static Image marioDead = SpriteAtlas.tileSet.getSubimage(240, 168, 48, 48);
-        static Image invincibilitySprite = SpriteAtlas.tileSet.getSubimage(240, 48, 48, 48);
-
-        // IDLE
-        static Image smallMarioIdle = SpriteAtlas.tileSet.getSubimage(288, 168, 48, 48);
-        static Image mediumMarioIdle = SpriteAtlas.tileSet.getSubimage(48, 327, 48, 72);
-        static Image bigMarioIdle = SpriteAtlas.tileSet.getSubimage(288, 216, 48, 96);
-
-        // JUMP
-        static Image smallMarioJump = SpriteAtlas.tileSet.getSubimage(192, 168, 48, 48);
-        static Image bigMarioJump = SpriteAtlas.tileSet.getSubimage(192, 216, 48, 96);
-
-        // BRAKE
-        static Image smallMarioBrake = SpriteAtlas.tileSet.getSubimage(144, 168, 48, 48);
-        static Image bigMarioBrake = SpriteAtlas.tileSet.getSubimage(144, 216, 48, 96);
-
-        // CROUCH
-        static Image marioCrouch = SpriteAtlas.tileSet.getSubimage(240, 246, 48, 66);
-
-        static Image[] smallMarioFlag = {
-            SpriteAtlas.tileSet.getSubimage(387, 168, 42, 48),
-            SpriteAtlas.tileSet.getSubimage(339, 168, 42, 48)
-        };
-        
-        static Image[] bigMarioFlag = {
-            SpriteAtlas.tileSet.getSubimage(387, 222, 42, 90),
-            SpriteAtlas.tileSet.getSubimage(339, 222, 42, 90)
-        };
-
-        static Image[] smallMarioRun = new Image[] {
-            SpriteAtlas.tileSet.getSubimage(0, 168, 48, 48),
-            SpriteAtlas.tileSet.getSubimage(48, 168, 48, 48),
-            SpriteAtlas.tileSet.getSubimage(96, 168, 48, 48)
-        };
-
-        static Image[] bigMarioRun = new Image[] {
-            SpriteAtlas.tileSet.getSubimage(96, 216, 48, 96),
-            SpriteAtlas.tileSet.getSubimage(48, 216, 48, 96),
-            SpriteAtlas.tileSet.getSubimage(0, 216, 48, 96)
-        };
-    }
-
-    class Animation {
+    private class Animation {
         private Runnable currentAnimation = () -> {};
         private boolean animationTerminated = false;
 
@@ -262,7 +221,7 @@ public class Mario extends GameObject {
 
         public void update() {
             currentAnimation.run();
-
+            
             if (isInvincible) {
                 invincibleAnim();
             }
@@ -273,10 +232,10 @@ public class Mario extends GameObject {
         public void flagAnim() {
             if (animTimer > 10 * Time.deltaTime * animFrame) {
                 animFrame++;
-                if (marioStates.state instanceof States.SmallMario) {
-                    setSprite(Sprites.smallMarioFlag[animFrame % 2]);
+                if (marioStates.getState() instanceof States.SmallMario) {
+                    setSprite(SpriteAtlas.Mario.smallMarioFlag[animFrame % 2]);
                 } else {
-                    setSprite(Sprites.bigMarioFlag[animFrame % 2]);
+                    setSprite(SpriteAtlas.Mario.bigMarioFlag[animFrame % 2]);
                 }
             }
         }
@@ -284,7 +243,7 @@ public class Mario extends GameObject {
         public void invincibleAnim() {
             // Alternate between invisible and visible every 7 frames
             if (invisibilityTimer > 7 * Time.deltaTime) {
-                setSprite(Sprites.invincibilitySprite);
+                setSprite(SpriteAtlas.Mario.invincibilitySprite);
             }
 
             if (invisibilityTimer > 14 * Time.deltaTime) {
@@ -295,38 +254,38 @@ public class Mario extends GameObject {
         }
 
         public void idleAnim() {
-            if(marioStates.state instanceof States.SmallMario) {
-                setSprite(Sprites.smallMarioIdle);
+            if(marioStates.getState() instanceof States.SmallMario) {
+                setSprite(SpriteAtlas.Mario.smallMarioIdle);
             } else {
-                setSprite(Sprites.bigMarioIdle);
+                setSprite(SpriteAtlas.Mario.bigMarioIdle);
             }
         }
 
         public void jumpAnim() {
-            if (marioStates.state instanceof States.SmallMario) {
-                setSprite(Sprites.smallMarioJump);
+            if (marioStates.getState() instanceof States.SmallMario) {
+                setSprite(SpriteAtlas.Mario.smallMarioJump);
             } else {
-                setSprite(Sprites.bigMarioJump);
+                setSprite(SpriteAtlas.Mario.bigMarioJump);
             }
         }
 
         public void brakeAnim() {
-            if (marioStates.state instanceof States.SmallMario) {
-                setSprite(Sprites.smallMarioBrake);
+            if (marioStates.getState() instanceof States.SmallMario) {
+                setSprite(SpriteAtlas.Mario.smallMarioBrake);
             } else {
-                setSprite(Sprites.bigMarioBrake);
+                setSprite(SpriteAtlas.Mario.bigMarioBrake);
             }
         }
 
         public void crouchAnim() {
-            setSprite(Sprites.marioCrouch);
+            setSprite(SpriteAtlas.Mario.marioCrouch);
         }
 
         public void runAnim() {
-            if (marioStates.state instanceof States.SmallMario) {
-                setSprite(Sprites.smallMarioRun[runFrames[animFrame % 4]]);
+            if (marioStates.getState() instanceof States.SmallMario) {
+                setSprite(SpriteAtlas.Mario.smallMarioRun[runFrames[animFrame % 4]]);
             } else {
-                setSprite(Sprites.bigMarioRun[runFrames[animFrame % 4]]);
+                setSprite(SpriteAtlas.Mario.bigMarioRun[runFrames[animFrame % 4]]);
             }
 
             if (animTimer > (6 * Time.deltaTime) * animFrame) {
@@ -335,7 +294,7 @@ public class Mario extends GameObject {
         }
 
         public void deathAnim() {
-            setSprite(Sprites.marioDead);
+            setSprite(SpriteAtlas.Mario.marioDead);
             if (animTimer > 14 * Time.deltaTime) {
                 freezeMovement = false;
             }
@@ -345,13 +304,13 @@ public class Mario extends GameObject {
             if (animTimer > (7 * Time.deltaTime) * animFrame) {
                 switch (growFrames[animFrame]) {
                     case 0:
-                        setSprite(Sprites.smallMarioIdle);
+                        setSprite(SpriteAtlas.Mario.smallMarioIdle);
                         break;
                     case 1:
-                        setSprite(Sprites.mediumMarioIdle);
+                        setSprite(SpriteAtlas.Mario.mediumMarioIdle);
                         break;
                     case 2:
-                        setSprite(Sprites.bigMarioIdle);
+                        setSprite(SpriteAtlas.Mario.bigMarioIdle);
                         break;
                 }
 
@@ -367,13 +326,13 @@ public class Mario extends GameObject {
             if (animTimer > (7 * Time.deltaTime) * animFrame) {
                 switch (shrinkFrames[animFrame]) {
                     case 0:
-                        setSprite(Sprites.smallMarioIdle);
+                        setSprite(SpriteAtlas.Mario.smallMarioIdle);
                         break;
                     case 1:
-                        setSprite(Sprites.mediumMarioIdle);
+                        setSprite(SpriteAtlas.Mario.mediumMarioIdle);
                         break;
                     case 2:
-                        setSprite(Sprites.bigMarioIdle);
+                        setSprite(SpriteAtlas.Mario.bigMarioIdle);
                         break;
                 }
 
@@ -386,17 +345,13 @@ public class Mario extends GameObject {
         }
     }
 
-    // def win_anim_on_flag(self):
-    //     """Animation when sliding down flag pole"""
-    //     if self.mario_size == 'Small_Mario':
-    //         self.current_sprite = sprites.WIN_SPRITES_SMALL[self.anim_frame % 2]
-    //     else:
-    //         self.current_sprite = sprites.WIN_SPRITES_BIG[self.anim_frame % 2]
-    //     if self.anim_timer > 8 * c.delta_time:
-    //         self.anim_frame += 1
-    //         self.anim_timer = 0
+    // _______________ STATES _______________
 
-    interface Events {
+    public State getMarioState() {
+        return this.marioStates.getState();
+    }
+
+    private interface Events {
         // Action events
         String idle = "idle";
         String jump = "jump";
@@ -407,7 +362,6 @@ public class Mario extends GameObject {
         String brake = "brake";
         String crouch = "crouch";
         String flagPole = "flagPole";
-        String win = "win";
 
         // Mario events
         String shrink = "shrink";
@@ -417,7 +371,7 @@ public class Mario extends GameObject {
         String smallMario = "smallMario";
     }
 
-    class States implements Events {
+    public class States implements Events {
         class IdleState extends State {
             public void onEnter(String event) {
                 animation.setAnimation(animation::idleAnim);
@@ -446,7 +400,7 @@ public class Mario extends GameObject {
         }
 
         public class JumpState extends State {
-            // State when jumping when spacebar input affects velocity
+            // State when jumping when spacebar input affects VEL
 
             public State onEvent(String event) {
                 switch (event){
@@ -474,21 +428,6 @@ public class Mario extends GameObject {
                 animation.setAnimation(animation::jumpAnim);
                 isJumping = true;
                 friction = 1;
-                
-                if (event != Events.falling && event != Events.resumeJump) {
-                    vel.y = Config.JUMP_VELOCITY;
-                }
-
-                if (event == Events.win) {
-                    // When mario jumps off the flagpole
-                    vel.y = Config.WIN_JUMP_VELOCITY;
-                }
-
-                // if (marioStates.state instanceof SmallMario ) {
-                //     sounds.smallJump.play();
-                // } else {
-                //     sounds.bigJump.play();
-                // }
             }
 
             public void update() {
@@ -529,14 +468,17 @@ public class Mario extends GameObject {
                     case crouch:
                         return new CrouchState();
                     case idle:
-                        return new IdleState();
+                        if (!Keys.left && !Keys.right || vel.x == 0) {
+                            return new IdleState();
+                        }
+                        break;
                     case grow: // Fallthrough
                     case shrink:
                         return new PowerupState();
                 }
                     
-                    return this;
-                }
+                return this;
+            }
 
             public void onExit() {
                 animation.clearAnimation();;
@@ -544,7 +486,7 @@ public class Mario extends GameObject {
         }
 
         public class BrakeState extends State {
-            // State when input is opposite velocity
+            // State when input is opposite VEL
             
             public State onEvent(String event) {
                 switch (event) {
@@ -679,7 +621,7 @@ public class Mario extends GameObject {
 
                 blinkTimer += Time.deltaTime;
                 if (blinkTimer > 7 * Time.deltaTime) {
-                    // animation.currentSprite = sprites.EMPTY_SPRITE;
+                    // animation.currentSprite = SpriteAtlas.Mario.EMPTY_SPRITE;
                     if(blinkTimer > 14 * Time.deltaTime) {
                         blinkTimer = 0;
                     }
@@ -727,7 +669,7 @@ public class Mario extends GameObject {
             public void update() {
                 if (animation.animationTerminated()) {
                     freezeMovement = false;
-
+                    
                     switch (powerupType) {
                         case grow:
                             marioStates.onEvent(bigMario);
@@ -743,7 +685,7 @@ public class Mario extends GameObject {
 
         public class FlagPoleState extends State {
             public State onEvent(String event) {
-                if (event.equals(win)) {
+                if (event.equals(jump)) {
                     return new JumpState();
                 }
 
@@ -766,11 +708,11 @@ public class Mario extends GameObject {
                 vel.x = 0.20f;
                 maxVel = vel.x;
                 gravity = true;
-                winCondition = true;
+                Keys.right = true;
             }
         }
 
-// MARIO STATES _________________________________________________________________________
+        // MARIO STATES _________________________________________________________________________
 
         public class SmallMario extends State {
             public State onEvent(String event) {
@@ -804,67 +746,18 @@ public class Mario extends GameObject {
             public void onEnter(String state) {
                 actionStates.disable();
                 animation.setAnimation(animation::deathAnim);
-                vel = new Vector2(0, Config.JUMP_VELOCITY);
+                vel = new Vector2(0, Config.JUMP_VEL);
                 acceleration = 0;
                 hasCollider = false;
                 freezeMovement = true;
             }
 
             public void update() {
-                if (rect.pos.y > Config.FRAME_SIZE[1]) {
-                    isAwake = false;
+                if (rect.pos.y > Config.FRAME_SIZE[1] + 1000) {
+                    setActive(false);
                     triggerScene(Config.Scenes.MAIN_MENU);
                 }
             }
         }
     }
 }
-
-    // class Win_State(State):
-    //     """State when mario wins, runs and manages events related to the final win animation"""
-    //     def __init__(self):
-    //         self.animation_step = 0
-    //         self.timer = 0
-
-    //     def on_event(self, event):
-    //         return self
-
-    //     def on_enter(self, owner_object):
-    //         owner_object.animation.reset_anim_vars()
-    //         owner_object.animation.start_height = owner_object.pos.y
-    //         owner_object.animation.new_y = owner_object.pos.y
-    //         owner_object.pos.x = c.flagpole.pos.x - 16
-    //         owner_object.freeze_movement = True
-    //         owner_object.freeze_input = True
-    //         owner_object.vel = Vector2()
-    //         pg.mixer.music.stop()
-    //         sounds.flagpole_sound.play()
-
-    //     def update(self, owner_object):
-
-    //         if self.animation_step == 0:
-    //             owner_object.animation.win_anim_on_flag()
-    //             owner_object.pos.y += 4
-    //             if owner_object.pos.y > c.flagpole.pos.y + c.flagpole.rect.h - 100:
-    //                 self.animation_step = 1
-
-    //         elif self.animation_step == 1:
-    //             owner_object.pos.x = c.flagpole.pos.x + 24
-    //             owner_object.flip_sprites = True
-    //             self.timer += c.delta_time
-    //             if self.timer > 20 * c.delta_time:
-    //                 owner_object.flip_sprites = False
-    //                 owner_object.freeze_movement = False
-    //                 owner_object.pos.x = c.flagpole.pos.x + c.flagpole.rect.w
-    //                 self.animation_step = 2
-    //                 pg.mixer.music.set_endevent(c.WIN_SONG_END)
-    //                 pg.mixer.music.load(sounds.stage_clear)
-    //                 pg.mixer.music.play()
-
-    //         elif self.animation_step == 2:
-    //             c.ACCELERATION = c.MARIO_ACCELERATION
-    //             owner_object.Pressed_right = True
-    //             if owner_object.pos.x > c.LEVEL_END_X:
-    //                 owner_object.freeze_movement = True
-    //                 c.final_count_down = True
- 
