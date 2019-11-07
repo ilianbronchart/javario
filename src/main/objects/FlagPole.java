@@ -1,6 +1,5 @@
 package src.main.objects;
 
-import javafx.scene.image.Image;
 import src.main.basetypes.GameObject;
 import src.main.basetypes.Rectangle;
 import src.main.globals.SpriteAtlas;
