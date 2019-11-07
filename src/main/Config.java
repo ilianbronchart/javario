@@ -32,7 +32,7 @@ public abstract class Config{
     
     // Velocities for different events
     public final static float JUMP_VEL = -0.9f;
-    public final static float GOOMBA_SQUISH_JUMP_VEL = -0.4f;
+    public final static float ENEMY_SQUISH_JUMP_VEL = -0.4f;
     public final static float WIN_JUMP_VEL = -0.4f;
     public final static float BUMP_VEL = 0.1f; // VEL that mario gets when he bumps the underside of a collider
     public final static float MARIO_MAX_VEL = 0.35f;
@@ -71,10 +71,9 @@ public abstract class Config{
 
     public static class LevelOne {
         public final static int TIME = 400;
-        public final static int MAX_SCROLL = 9050; // Furthest distance the camera can scroll to
+        public final static int MAX_SCROLL = 9350; // Furthest distance the camera can scroll to
         public final static Vector2 CAMERA_START_POS = new Vector2();
         public final static Vector2 FOREGROUND_POS = new Vector2(9840, 504);
         public final static Rectangle MARIO_RECT = new Rectangle(138, 552, 36, 48);
-
     }
 }

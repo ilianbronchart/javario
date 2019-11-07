@@ -41,7 +41,7 @@ public class SuperMushroom extends GameObject {
         
         if (other.isEntity()) {
             if (other.hasTag(Config.BRICK_TAG) || other.hasTag(Config.QUESTION_TAG)) {
-                vel.y -= 0.3f;
+                vel.y = -0.3f;
             }
             
             // Cancel collision

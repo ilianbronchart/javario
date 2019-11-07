@@ -34,7 +34,7 @@ public class GameObject {
     public GameObject(String tag, Image sprite, Rectangle rect){
         this.tag = tag == null ? "" : tag;
         this.sprite = sprite;
-        this.rect = rect;
+        this.rect = new Rectangle(rect.pos.x, rect.pos.y, rect.w, rect.h);
     }
     
     public boolean hasTag(String tag) {

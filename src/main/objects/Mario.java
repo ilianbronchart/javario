@@ -9,6 +9,7 @@ import src.main.globals.Keys;
 import src.main.globals.SpriteAtlas;
 import src.main.globals.Time;
 import src.main.objects.Mario.States.BigMario;
+import src.main.objects.Mario.States.FlagPoleState;
 
 public class Mario extends GameObject {
     private States states = new States();
@@ -105,7 +106,7 @@ public class Mario extends GameObject {
             if (rect.pos.y + rect.h - dy * Time.deltaTime < col.rect().pos.y) {
                 // Mario is squishing the goomba
                 actionStates.onEvent(Events.jump);
-                vel.y = Config.GOOMBA_SQUISH_JUMP_VEL;
+                vel.y = Config.ENEMY_SQUISH_JUMP_VEL;
                 rect.pos.y = col.rect().pos.y - rect.h;
             } else {
                 // Mario is running into the goomba
@@ -128,6 +129,7 @@ public class Mario extends GameObject {
                 // Mario is squishing the turtle
                 if (!(turtle.getState() instanceof Turtle.States.ShellState)) {
                     actionStates.onEvent(Events.jump);
+                    vel.y = Config.ENEMY_SQUISH_JUMP_VEL;
                 }
             } else {
                 // Mario is running into the turtle
@@ -154,21 +156,23 @@ public class Mario extends GameObject {
         }
 
         if (col.hasTag(Config.FLAGPOLE_TAG)) {
-            if (rect.pos.y < col.rect().pos.y + col.rect().h) {
+            if (!(actionStates.getState() instanceof States.FlagPoleState)) {
                 rect.pos.x = col.rect().pos.x + 30;
+
                 actionStates.onEvent(Events.flagPole);
-            } 
+            }
 
             if (rect.pos.y + rect.h > col.rect().pos.y + col.rect().h - 20) {
                 actionStates.onEvent(Events.jump);
                 vel.y = Config.WIN_JUMP_VEL;
             }
+
             return;
         }
 
         if (col.hasTag(Config.WIN_TRIGGER_TAG)) {
-            triggerScene(Config.Scenes.MAIN_MENU);
-            Keys.unFreezeInput();
+            actionStates.onEvent(Events.win);
+            return;
         }
 
         if (dx != 0) {
@@ -362,6 +366,7 @@ public class Mario extends GameObject {
         String brake = "brake";
         String crouch = "crouch";
         String flagPole = "flagPole";
+        String win = "win";
 
         // Mario events
         String shrink = "shrink";
@@ -393,6 +398,8 @@ public class Mario extends GameObject {
                     case grow: // Fallthrough
                     case shrink:
                         return new PowerupState();
+                    case win:
+                        return new WinState();
                 }
                 
                 return this;
@@ -443,6 +450,7 @@ public class Mario extends GameObject {
 
             public void onExit() {
                 isJumping = false;
+                acceleration = 0;
             }
         }
         
@@ -475,6 +483,8 @@ public class Mario extends GameObject {
                     case grow: // Fallthrough
                     case shrink:
                         return new PowerupState();
+                    case win:
+                        return new WinState();
                 }
                     
                 return this;
@@ -709,6 +719,21 @@ public class Mario extends GameObject {
                 maxVel = vel.x;
                 gravity = true;
                 Keys.right = true;
+            }
+        }
+
+        public class WinState extends State {
+            public void onEnter(String event) {
+                acceleration = 0;
+                vel = new Vector2();
+                ScoreSystem.addTimeScore();
+            }
+
+            public void update() {
+                if (ScoreSystem.getTime() == 0) {
+                    triggerScene(Config.Scenes.MAIN_MENU);
+                    Keys.unFreezeInput();
+                }
             }
         }
 

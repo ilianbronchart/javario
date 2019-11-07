@@ -27,6 +27,10 @@ public class SceneManager {
     }
 
     private Scene queueScene(String nextScene) {
+        if (currentScene != null) {
+            currentScene.destroy();
+        }
+
         switch (nextScene) {
             case Config.Scenes.MAIN_MENU:
                 return new MainMenu();

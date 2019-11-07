@@ -3,6 +3,7 @@ package src.main.objects;
 import java.awt.*;
 import src.main.basetypes.Rectangle;
 import src.main.globals.SpriteAtlas;
+import src.main.Config;
 import src.main.Main;
 import src.main.basetypes.*;
 import src.main.globals.Time;
@@ -15,8 +16,10 @@ public class ScoreSystem extends GameObject {
     private static int score = 0;
     private static int coins = 0;
     private static int time;
-    private float timer = 0;
 
+    private float timer = 0;
+    private static boolean addTimeScore = false;
+    
     private Vector2 scorePos = new Vector2(66, 49);
     private Vector2 coinsPos = new Vector2(306, 49);
     private Vector2 timerPos = new Vector2(610, 49);
@@ -29,11 +32,22 @@ public class ScoreSystem extends GameObject {
     }
 
     public void update() {
+        if (time == 0) { return; }
+
         timer += Time.deltaTime;
-        if (timer > 17 * Time.deltaTime && time != 0) {
+
+        if (addTimeScore && timer > 3 * Time.deltaTime) {
+            addScore(Config.TIME_SCORE);
+            decrementTimer();
+        }
+        else if (timer > 17 * Time.deltaTime) {
             timer = 0;
             decrementTimer();
         }
+    }
+
+    public static void addTimeScore() {
+        addTimeScore = true;
     }
 
     public static int getTime() {

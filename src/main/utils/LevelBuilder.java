@@ -81,7 +81,7 @@ public class LevelBuilder {
     }
 
     private static void addFlagPole(int x, int y) {
-        FlagPole flagPole = new FlagPole(new Rectangle(x, y - 8, Config.TILE_SIZE, 456));
+        FlagPole flagPole = new FlagPole(new Rectangle(x, y - 8 * Config.TILE_SIZE, Config.TILE_SIZE, 456));
         gameObjects.add(flagPole);
     }
 

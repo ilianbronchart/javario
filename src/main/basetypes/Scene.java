@@ -24,6 +24,11 @@ public class Scene {
         camera = new Camera(startPos, w, h, maxScroll);
     }
 
+    public void destroy() {
+        // Destroy nested instances
+        gameObjects = null;
+    }
+
     public void update() {
         updateGameObjects(gameObjects);
         physicsUpdate(gameObjects);
